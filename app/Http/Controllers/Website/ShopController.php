@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Website;
  
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\{Product,Category,Brand};
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Support\Facades\Cache;
  
-class ShopController extends Controller {
-    
-    public function index(Request $request) {
+class ShopController extends Controller
+{
+    public function index(Request $request)
+    {
         $products = Product::query()->with(['translations', 'media']);
  
         // ====================================================
@@ -19,30 +23,50 @@ class ShopController extends Controller {
  
         if ($request->filled('category_id')) {
             $categoryId = $request->category_id;
-            $baseProducts = Product::where('category_id', $categoryId)->get();
-            if ($baseProducts->count() <= 3) {
+            $baseProductsCount = Product::query()->where('category_id', $categoryId)->count();
+            if ($baseProductsCount <= 3) {
                 $subCategoryIds = Category::where('parent_id', $categoryId)->pluck('id')->toArray();
                 $products->whereIn('category_id', array_merge([$categoryId], $subCategoryIds));
             } else {
                 $products->where('category_id', $categoryId);
             }
-            $subcategories = Category::where('parent_id', $categoryId)->with(['translations', 'media'])->get();
+
+            $subcategories = Cache::remember("shop.subcategories.$categoryId", 60 * 10, function () use ($categoryId) {
+                return Category::query()
+                    ->where('parent_id', $categoryId)
+                    ->with(['translations', 'media'])
+                    ->get();
+            });
         } else {
-            $subcategories = Category::with(['translations', 'media'])->get();
+            $subcategories = Cache::remember('shop.subcategories.all', 60 * 10, function () {
+                return Category::query()
+                    ->with(['translations', 'media'])
+                    ->get();
+            });
         }
+
         if ($request->filled('brand_id')) {
             $products->where('brand_id', $request->brand_id);
         }
+
         if ($request->filled('min_price')) {
             $products->where('price', '>=', $request->min_price);
         }
+
         if ($request->filled('max_price')) {
             $products->where('price', '<=', $request->max_price);
         }
+
         $products = $products->latest()->paginate(12);
-        $categories = Category::with('translations')->get();
-        //$subcategories = Category::whereNotNull('parent_id')->with(['translations', 'media'])->get();
-        $brands = Brand::all();
+
+        $categories = Cache::remember('shop.categories', 60 * 30, function () {
+            return Category::query()->with('translations')->get();
+        });
+
+        $brands = Cache::remember('shop.brands', 60 * 30, function () {
+            return Brand::query()->get();
+        });
+
         $pageTitle = trans('site/site.shop');
         // return products;
         return view('website.pages.shop', compact('products', 'categories', 'brands', 'pageTitle', 'subcategories'))->with([
@@ -52,12 +76,8 @@ class ShopController extends Controller {
         ]);
     }
  
-    public function show($id) {
-        $categories = Category::with(['translations', 'media', 'children.translations'])
-            ->whereNull('parent_id')
-            ->where('status', 'active')
-            ->get();
-        
+    public function show($id)
+    {
         $product = Product::with(['translations', 'media', 'category', 'brand', 'type', 'tags', 'sections'])->findOrFail($id);
         
         $relatedProducts = Product::with(['translations', 'media'])
@@ -69,7 +89,7 @@ class ShopController extends Controller {
         ->take(10)
         ->get();
  
-        return view('website.pages.products_show', compact('product', 'categories', 'relatedProducts'))->with(
+        return view('website.pages.products_show', compact('product', 'relatedProducts'))->with(
                 [
                     'breadcrumbs' => [
                         ['title' => trans('site/site.shop'), 'url' => route('shop.index')],

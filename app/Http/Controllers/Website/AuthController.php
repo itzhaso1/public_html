@@ -4,20 +4,15 @@ namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\{User,Category};
-use Illuminate\Support\Facades\{Auth, Cache, Hash};
-class AuthController extends Controller {
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
+class AuthController extends Controller
+{
     public function showLoginForm()
     {
-        $locale = app()->getLocale();
-        $categories = Cache::remember("website.categories.menu.$locale", 60 * 10, function () {
-            return Category::with(['translations', 'media', 'children.translations'])
-                ->whereNull('parent_id')
-                ->where('status', 'active')
-                ->get();
-        });
         return view('website.auth.login', [
-            'categories' => $categories,
             'pageTitle' => trans('site/site.login_page_title'),
             'breadcrumbs' => [
                 ['title' => __('site/site.login_page_title')],
@@ -44,15 +39,7 @@ class AuthController extends Controller {
 
     public function showRegisterForm()
     {
-        $locale = app()->getLocale();
-        $categories = Cache::remember("website.categories.menu.$locale", 60 * 10, function () {
-            return Category::with(['translations', 'media', 'children.translations'])
-                ->whereNull('parent_id')
-                ->where('status', 'active')
-                ->get();
-        });
         return view('website.auth.register', [
-            'categories' => $categories,
             'pageTitle' => trans('site/site.register_page_title'),
             'breadcrumbs' => [
                 ['title' => __('site/site.register_page_title')],

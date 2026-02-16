@@ -5,25 +5,30 @@ namespace App\Http\Controllers\Website;
 use App\Services\Services\ERP\ERPService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\{Order,OrderItem, Category, Coupon};
+use App\Models\Category;
+use App\Models\Coupon;
+use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
 use App\Services\Contracts\CartInterface;
-class CheckoutController extends Controller {
-    public function __construct(protected CartInterface $cartInterface) {
+
+class CheckoutController extends Controller
+{
+    public function __construct(protected CartInterface $cartInterface)
+    {
         $this->cartInterface = $cartInterface;
     }
-    public function create() {
+
+    public function create()
+    {
         $cart = $this->cartInterface->get();
         $total = $this->cartInterface->total();
-        $categories = Category::with(['translations', 'media', 'children.translations'])
-            ->whereNull('parent_id')
-            ->where('status', 'active')
-            ->get();
-        if($cart->count() == 0) {
+
+        if ($cart->count() == 0) {
             return redirect()->route('home');
         }
+
         return view('website.pages.checkout')->with([
-            'categories' => $categories,
             'cart' => $cart,
             'total' => $total,
             'pageTitle' => trans('site/site.checkout'),
@@ -33,7 +38,8 @@ class CheckoutController extends Controller {
         ]);
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $cart = $this->cartInterface->get();
         $coupon = null;
         if ($request->filled('coupon_code')) {
@@ -72,7 +78,7 @@ class CheckoutController extends Controller {
                 'total_price' => $discountedTotal,
                 'coupon_id' => $coupon?->id,
             ]);
-            foreach($cart as $item) {
+            foreach ($cart as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -105,7 +111,8 @@ class CheckoutController extends Controller {
         }*/
     }
 
-    public function applyCoupon(Request $request) {
+    public function applyCoupon(Request $request)
+    {
         $code = $request->input('coupon_code');
         $coupon = Coupon::where('code', $code)->first();
 
