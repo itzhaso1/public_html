@@ -97,11 +97,19 @@
                                 </div>
                             </div>
 
-                            <a href="{{ route('website.product.show', $product) }}"
-                               class="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-bold text-white hover:bg-yellow-400 hover:text-black transition">
-                                عرض التفاصيل
-                                <span aria-hidden="true">›</span>
-                            </a>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('website.product.show', $product) }}"
+                                   class="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-bold text-white hover:bg-yellow-400 hover:text-black transition">
+                                    عرض التفاصيل
+                                    <span aria-hidden="true">›</span>
+                                </a>
+                                @if(config('bank.enabled'))
+                                    <a href="{{ route('website.diamonds.manual_payment.create', $product) }}"
+                                       class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-800 hover:bg-gray-50 transition">
+                                        دفع يدوي
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </article>

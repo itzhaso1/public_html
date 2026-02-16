@@ -64,6 +64,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('{id}/invoice', [Dashboard\OrderController::class, 'generate'])->name('invoice');
             Route::post('{order}/send-to-erp', [Dashboard\OrderController::class, 'sendOrderToERP']);
         });
+
+        Route::prefix('manual-payments')->as('manual_payments.')->group(function () {
+            Route::get('/', [Dashboard\ManualPaymentController::class, 'index'])->name('index');
+            Route::get('{manualPaymentRequest}', [Dashboard\ManualPaymentController::class, 'show'])->name('show');
+            Route::post('{manualPaymentRequest}/approve', [Dashboard\ManualPaymentController::class, 'approve'])->name('approve');
+            Route::post('{manualPaymentRequest}/reject', [Dashboard\ManualPaymentController::class, 'reject'])->name('reject');
+        });
         
         Route::get('dashboard', Dashboard\DashboardController::class)->name('dashboard');
     });
