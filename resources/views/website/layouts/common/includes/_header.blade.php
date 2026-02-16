@@ -23,7 +23,13 @@
                 <a href="{{route('home')}}" class="text-white hover:text-yellow-400 font-medium">الرئيسية</a>
                 <a href="#" class="text-white hover:text-yellow-400 font-medium">المنتجات</a>
                 <a href="#" class="text-white hover:text-yellow-400 font-medium">العروض</a>
+                @auth
+                    <a href="{{ route('customer.purchases') }}" class="text-white hover:text-yellow-400 font-medium">مشترياتي</a>
+                @endauth
                 <a href="https://chat.whatsapp.com/LiEKm0hQPlB9yeToyetcbh" class="text-white hover:text-yellow-400 font-medium">تواصل معنا</a>
+                @guest
+                    <a href="{{ route('auth.login') }}" class="text-white hover:text-yellow-400 font-medium">تسجيل الدخول</a>
+                @endguest
             </div>
             <div class="md:hidden flex items-center">
                 <button id="mobile-menu-button" class="text-white focus:outline-none">
@@ -39,6 +45,12 @@
         <a href="#" class="block text-white px-3 py-2 rounded hover:bg-gray-700">الرئيسية</a>
         <a href="#" class="block text-white px-3 py-2 rounded hover:bg-gray-700">المنتجات</a>
         <a href="#" class="block text-white px-3 py-2 rounded hover:bg-gray-700">العروض</a>
+        @auth
+            <a href="{{ route('customer.purchases') }}" class="block text-white px-3 py-2 rounded hover:bg-gray-700">مشترياتي</a>
+        @endauth
         <a href="https://chat.whatsapp.com/LiEKm0hQPlB9yeToyetcbh" class="block text-white px-3 py-2 rounded hover:bg-gray-700">تواصل معنا</a>
+        @guest
+            <a href="{{ route('auth.login') }}" class="block text-white px-3 py-2 rounded hover:bg-gray-700">تسجيل الدخول</a>
+        @endguest
     </div>
 </nav>
