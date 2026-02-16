@@ -108,6 +108,9 @@ Route::group(
             Route::get('purchases', [Customer\PurchasesController::class, 'index'])->name('purchases');
             Route::get('diamond-codes/{diamondCode}/image', [Customer\DiamondCodeController::class, 'image'])
                 ->name('diamond_codes.image');
+            Route::get('profile', [Customer\ProfileController::class, 'edit'])->name('profile');
+            Route::post('profile', [Customer\ProfileController::class, 'update'])->name('profile.update');
+            Route::post('profile/password', [Customer\ProfileController::class, 'updatePassword'])->name('profile.password');
             
             
         });
