@@ -30,9 +30,20 @@ class ManualPaymentController extends Controller
             'pageTitle' => 'تفاصيل طلب الدفع اليدوي',
             'mpr' => $manualPaymentRequest,
             'receiptUrl' => $manualPaymentRequest->receipt_path
-                ? Storage::disk('public')->url($manualPaymentRequest->receipt_path)
+                ? route('admin.manual_payments.receipt', $manualPaymentRequest)
                 : null,
+            'receiptIsPdf' => $manualPaymentRequest->receipt_path
+                ? str_ends_with(strtolower($manualPaymentRequest->receipt_path), '.pdf')
+                : false,
         ]);
+    }
+
+    public function receipt(ManualPaymentRequest $manualPaymentRequest)
+    {
+        abort_if(! $manualPaymentRequest->receipt_path, 404);
+        abort_if(! Storage::disk('public')->exists($manualPaymentRequest->receipt_path), 404);
+
+        return Storage::disk('public')->response($manualPaymentRequest->receipt_path);
     }
 
     public function approve(Request $request, ManualPaymentRequest $manualPaymentRequest)
