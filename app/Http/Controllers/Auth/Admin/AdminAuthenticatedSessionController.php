@@ -9,6 +9,7 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class AdminAuthenticatedSessionController extends Controller
 {
@@ -27,23 +28,29 @@ class AdminAuthenticatedSessionController extends Controller
 
     public function store(AdminLoginRequest $request)
     {
-        $credentials = $request->only('email', 'password');
-        if (admin_guard()->attempt($credentials)) {
-            $admin = admin_guard()->user();
-            if ($admin->status === 'active') {
-                toastr()->success(trans('dashboard/auth.success_login_msg'));
-
-                return redirect()->route($this->redirectRouteName);
-            } else {
-                admin_guard()->logout();
-                toastr()->warning(trans('dashboard/auth.not_active_account_msg'));
-
-                return redirect()->back();
-            }
+        try {
+            $request->authenticate();
+        } catch (ValidationException $e) {
+            toastr()->error(trans('dashboard/auth.login_credential_failure'));
+            throw $e;
         }
-        toastr()->error(trans('dashboard/auth.login_credential_failure'));
 
-        return redirect()->back();
+        $request->session()->regenerate();
+
+        $admin = admin_guard()->user();
+        if ($admin?->status !== 'active') {
+            admin_guard()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            toastr()->warning(trans('dashboard/auth.not_active_account_msg'));
+
+            return redirect()->back();
+        }
+
+        toastr()->success(trans('dashboard/auth.success_login_msg'));
+
+        return redirect()->route($this->redirectRouteName);
     }
 
     public function forgot_password()
