@@ -39,5 +39,10 @@ class ManualPaymentRequest extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function diamondCode()
+    {
+        return $this->hasOne(DiamondCode::class, 'manual_payment_request_id');
+    }
 }
 
