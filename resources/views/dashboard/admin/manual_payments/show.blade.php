@@ -85,7 +85,7 @@
                     </a>
                 </div>
                 <div class="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-3">
-                    @if(\Illuminate\Support\Str::endsWith(strtolower($receiptUrl), ['.pdf']))
+                    @if(($receiptIsPdf ?? false) === true)
                         <div class="text-sm text-gray-600">الإيصال PDF. افتحه من الزر بالأعلى.</div>
                     @else
                         <img src="{{ $receiptUrl }}" alt="Receipt" class="w-full rounded-xl">
