@@ -4,40 +4,58 @@ namespace App\Http\Controllers\Website;
  
 use App\Http\Controllers\Controller;
 use App\Models\{Category,Slider, Section, Product};
+use Illuminate\Support\Facades\Cache;
  
-class WebsiteController extends Controller {
-    public function __invoke() {
-        $sliders = Slider::with(['translations', 'media',])->latest()->get();
-        $categories = Category::with(['translations', 'media', 'children.translations'])
-            ->whereNull('parent_id')
-            ->where('status', 'active')
-            ->get();
-        $featuredCategories = Category::query()
-            ->whereNull('parent_id')
-            ->where('status', 'active')
-            ->with(['translations', 'media'])
-            ->get();
+class WebsiteController extends Controller
+{
+    public function __invoke()
+    {
+        $locale = app()->getLocale();
+
+        $sliders = Cache::remember("home.sliders.$locale", 60 * 5, function () {
+            return Slider::with(['translations', 'media'])->latest()->get();
+        });
+
+        // `$categories` is shared via View Composer for website.*
+        $categories = Cache::get("website.categories.menu.$locale")
+            ?? Category::with(['translations', 'media', 'children.translations'])
+                ->whereNull('parent_id')
+                ->where('status', 'active')
+                ->get();
+
+        $featuredCategories = Cache::remember("home.featured_categories.$locale", 60 * 5, function () {
+            return Category::query()
+                ->whereNull('parent_id')
+                ->where('status', 'active')
+                ->with(['translations', 'media'])
+                ->get();
+        });
+
         $categoryCount = $categories->count();
         $slidesPerView = $categoryCount < 10 ? $categoryCount : 10;
  
-        $sections = Section::with([
-            'translations',
-            'products.translations',
-            'products.media',
-            'categories.translations',
-        ])
-            ->orderBy('order')
-            ->get();
+        $sections = Cache::remember("home.sections.$locale", 60 * 5, function () {
+            return Section::with([
+                'translations',
+                'products.translations',
+                'products.media',
+                'categories.translations',
+            ])
+                ->orderBy('order')
+                ->get();
+        });
         
         $sectionProductIds = $sections->pluck('products')->flatten()->pluck('id')->unique();
         
         // تعديل بسيط: إخفاء منتجات الشحن من الصفحة الرئيسية أيضاً
-        $products = Product::with(['translations', 'media'])
-            ->where('status', 'published')
-            ->whereNotIn('id', $sectionProductIds)
-            ->whereNull('service_type') // ✅ إخفاء الجواهر من هنا
-            ->latest()
-            ->get();
+        $products = Cache::remember("home.products.$locale", 60 * 5, function () use ($sectionProductIds) {
+            return Product::with(['translations', 'media'])
+                ->where('status', 'published')
+                ->whereNotIn('id', $sectionProductIds)
+                ->whereNull('service_type') // ✅ إخفاء الجواهر من هنا
+                ->latest()
+                ->get();
+        });
             
         $categoryCount = $categories->count();
         $slidesPerView = $categoryCount < 10 ? $categoryCount : 10;
@@ -53,7 +71,8 @@ class WebsiteController extends Controller {
         ]);
     }
  
-    public function show(Product $product) {
+    public function show(Product $product)
+    {
         // ============================================================
         // ✅ التعديل الجديد: توجيه منتجات الشحن لصفحة خاصة
         // ============================================================
