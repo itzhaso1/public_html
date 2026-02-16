@@ -33,9 +33,24 @@ class ManualPaymentController extends Controller
             'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
         ]);
 
-        $receiptPath = null;
-        if ($request->hasFile('receipt')) {
-            $receiptPath = Storage::disk('public')->putFile('manual-payments', $request->file('receipt'));
+        try {
+            Storage::disk('public')->makeDirectory('manual-payments');
+
+            $receiptPath = null;
+            if ($request->hasFile('receipt')) {
+                $file = $request->file('receipt');
+                if (! $file->isValid()) {
+                    return back()->withErrors(['receipt' => 'فشل رفع الإيصال، حاول مرة أخرى.'])->withInput();
+                }
+
+                $receiptPath = Storage::disk('public')->putFile('manual-payments', $file);
+                if (! $receiptPath) {
+                    return back()->withErrors(['receipt' => 'تعذر حفظ الإيصال على السيرفر.'])->withInput();
+                }
+            }
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors(['receipt' => 'حدث خطأ أثناء رفع الإيصال.'])->withInput();
         }
 
         $mpr = ManualPaymentRequest::create([
@@ -47,7 +62,7 @@ class ManualPaymentController extends Controller
             'contact_email' => $data['contact_email'] ?? null,
             'amount' => (float) $product->price,
             'currency' => 'SAR',
-            'receipt_path' => $receiptPath,
+            'receipt_path' => $receiptPath ?? null,
             'status' => 'pending',
             'ip' => $request->ip(),
             'user_agent' => Str::limit((string) $request->userAgent(), 512, ''),
