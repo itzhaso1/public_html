@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\ManagerLoginRequest;
 use App\Models\Manager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB,Mail};
+use Illuminate\Validation\ValidationException;
 
 class ManagerAuthenticatedSessionController extends Controller
 {
@@ -23,22 +24,29 @@ class ManagerAuthenticatedSessionController extends Controller
 
     public function store(ManagerLoginRequest $request)
     {
-        $credentials = $request->only('email', 'password');
-        if (manager_guard()->attempt($credentials)) {
-            $manager = manager_guard()->user();
-            if ($manager->status === 'active') {
-                toastr()->success(trans('dashboard/auth.success_login_msg'));
-                return redirect()->route($this->redirectRouteName);
-            } else {
-                manager_guard()->logout();
-                toastr()->warning(trans('dashboard/auth.not_active_account_msg'));
-
-                return redirect()->back();
-            }
+        try {
+            $request->authenticate();
+        } catch (ValidationException $e) {
+            toastr()->error(trans('dashboard/auth.login_credential_failure'));
+            throw $e;
         }
-        toastr()->error(trans('dashboard/auth.login_credential_failure'));
 
-        return redirect()->back();
+        $request->session()->regenerate();
+
+        $manager = manager_guard()->user();
+        if ($manager?->status !== 'active') {
+            manager_guard()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            toastr()->warning(trans('dashboard/auth.not_active_account_msg'));
+
+            return redirect()->back();
+        }
+
+        toastr()->success(trans('dashboard/auth.success_login_msg'));
+
+        return redirect()->route($this->redirectRouteName);
     }
 
     public function forgot_password()
