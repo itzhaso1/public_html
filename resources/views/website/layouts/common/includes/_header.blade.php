@@ -25,11 +25,20 @@
                 <a href="#" class="text-white hover:text-yellow-400 font-medium">العروض</a>
                 @auth
                     <a href="{{ route('customer.purchases') }}" class="text-white hover:text-yellow-400 font-medium">مشترياتي</a>
+                    <a href="{{ route('customer.profile') }}" class="text-white hover:text-yellow-400 font-medium">ملفي الشخصي</a>
                 @endauth
                 <a href="https://chat.whatsapp.com/LiEKm0hQPlB9yeToyetcbh" class="text-white hover:text-yellow-400 font-medium">تواصل معنا</a>
                 @guest
                     <a href="{{ route('auth.login') }}" class="text-white hover:text-yellow-400 font-medium">تسجيل الدخول</a>
                 @endguest
+                @auth
+                    <form method="POST" action="{{ route('auth.logout') }}">
+                        @csrf
+                        <button type="submit" class="text-white hover:text-yellow-400 font-medium">
+                            تسجيل الخروج
+                        </button>
+                    </form>
+                @endauth
             </div>
             <div class="md:hidden flex items-center">
                 <button id="mobile-menu-button" class="text-white focus:outline-none">
@@ -47,10 +56,19 @@
         <a href="#" class="block text-white px-3 py-2 rounded hover:bg-gray-700">العروض</a>
         @auth
             <a href="{{ route('customer.purchases') }}" class="block text-white px-3 py-2 rounded hover:bg-gray-700">مشترياتي</a>
+            <a href="{{ route('customer.profile') }}" class="block text-white px-3 py-2 rounded hover:bg-gray-700">ملفي الشخصي</a>
         @endauth
         <a href="https://chat.whatsapp.com/LiEKm0hQPlB9yeToyetcbh" class="block text-white px-3 py-2 rounded hover:bg-gray-700">تواصل معنا</a>
         @guest
             <a href="{{ route('auth.login') }}" class="block text-white px-3 py-2 rounded hover:bg-gray-700">تسجيل الدخول</a>
         @endguest
+        @auth
+            <form method="POST" action="{{ route('auth.logout') }}" class="px-3 py-2">
+                @csrf
+                <button type="submit" class="w-full text-right text-white px-0 py-0 rounded hover:text-yellow-400">
+                    تسجيل الخروج
+                </button>
+            </form>
+        @endauth
     </div>
 </nav>

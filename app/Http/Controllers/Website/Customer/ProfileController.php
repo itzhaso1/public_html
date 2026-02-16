@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Controllers\Website\Customer;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
+class ProfileController extends Controller
+{
+    public function edit()
+    {
+        return view('website.customer.profile', [
+            'pageTitle' => 'الملف الشخصي',
+            'user' => auth()->user(),
+        ]);
+    }
+
+    public function update(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        ]);
+
+        $user->update([
+            'email' => $data['email'],
+        ]);
+
+        return back()->with('success', 'تم تحديث البريد الإلكتروني بنجاح.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return back()->with('success', 'تم تحديث كلمة المرور بنجاح.');
+    }
+}
+
