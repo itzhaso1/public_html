@@ -65,6 +65,14 @@ Route::group(
 
             return view('website.diamonds.codes', compact('products'));
         })->name('website.diamonds.codes');
+
+        // Manual bank transfer flow (upload receipt, pending approval)
+        Route::get('diamonds/{product}/manual-payment', [Website\ManualPaymentController::class, 'create'])
+            ->name('website.diamonds.manual_payment.create');
+        Route::post('diamonds/{product}/manual-payment', [Website\ManualPaymentController::class, 'store'])
+            ->name('website.diamonds.manual_payment.store');
+        Route::get('diamonds/manual-payment/thanks/{reference}', [Website\ManualPaymentController::class, 'thanks'])
+            ->name('website.diamonds.manual_payment.thanks');
  
         // ===============================
         // Website pages

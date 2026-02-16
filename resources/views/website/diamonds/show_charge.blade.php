@@ -76,6 +76,10 @@
                    class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 transition">
                     العودة للمتجر
                 </a>
+                <a href="{{ route('website.diamonds.manual_payment.create', $product) }}"
+                   class="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition">
+                    الدفع اليدوي (تحويل بنكي)
+                </a>
                 <a href="https://chat.whatsapp.com/LiEKm0hQPlB9yeToyetcbh"
                    target="_blank"
                    class="inline-flex items-center justify-center rounded-xl bg-[#25D366] px-5 py-3 text-sm font-extrabold text-white hover:brightness-95 transition">
