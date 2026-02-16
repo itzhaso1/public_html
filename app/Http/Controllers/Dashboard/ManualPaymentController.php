@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\DiamondCode;
 use App\Models\ManualPaymentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +52,32 @@ class ManualPaymentController extends Controller
         $request->validate([
             'admin_note' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        $manualPaymentRequest->load(['product']);
+
+        // If this request is for a "codes" product, allocate and deliver a code.
+        if (($manualPaymentRequest->product?->service_type ?? null) === 'codes') {
+            if (! $manualPaymentRequest->user_id) {
+                return back()->withErrors(['error' => 'لا يمكن تسليم الكود بدون مستخدم (تأكد أن العميل مسجّل دخول).']);
+            }
+
+            $available = DiamondCode::query()
+                ->where('product_id', $manualPaymentRequest->product_id)
+                ->where('status', 'available')
+                ->orderBy('id')
+                ->first();
+
+            if (! $available) {
+                return back()->withErrors(['error' => 'لا يوجد أكواد متاحة لهذا المنتج. أضف أكواد من الداشبورد أولاً.']);
+            }
+
+            $available->update([
+                'status' => 'delivered',
+                'user_id' => $manualPaymentRequest->user_id,
+                'manual_payment_request_id' => $manualPaymentRequest->id,
+                'delivered_at' => now(),
+            ]);
+        }
 
         $manualPaymentRequest->update([
             'status' => 'approved',

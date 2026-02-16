@@ -72,6 +72,14 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('{manualPaymentRequest}/approve', [Dashboard\ManualPaymentController::class, 'approve'])->name('approve');
             Route::post('{manualPaymentRequest}/reject', [Dashboard\ManualPaymentController::class, 'reject'])->name('reject');
         });
+
+        Route::prefix('diamond-codes')->as('diamond_codes.')->group(function () {
+            Route::get('/', [Dashboard\DiamondCodeController::class, 'index'])->name('index');
+            Route::get('create', [Dashboard\DiamondCodeController::class, 'create'])->name('create');
+            Route::post('/', [Dashboard\DiamondCodeController::class, 'store'])->name('store');
+            Route::get('{diamondCode}/image', [Dashboard\DiamondCodeController::class, 'image'])->name('image');
+            Route::delete('{diamondCode}', [Dashboard\DiamondCodeController::class, 'destroy'])->name('destroy');
+        });
         
         Route::get('dashboard', Dashboard\DashboardController::class)->name('dashboard');
     });

@@ -68,8 +68,10 @@ Route::group(
 
         // Manual bank transfer flow (upload receipt, pending approval)
         Route::get('diamonds/{product}/manual-payment', [Website\ManualPaymentController::class, 'create'])
+            ->middleware('auth')
             ->name('website.diamonds.manual_payment.create');
         Route::post('diamonds/{product}/manual-payment', [Website\ManualPaymentController::class, 'store'])
+            ->middleware('auth')
             ->name('website.diamonds.manual_payment.store');
         Route::get('diamonds/manual-payment/thanks/{reference}', [Website\ManualPaymentController::class, 'thanks'])
             ->name('website.diamonds.manual_payment.thanks');
@@ -103,6 +105,9 @@ Route::group(
             Route::get('orders/{status?}', [Customer\DashboardController::class, 'ordersByStatus'])->name('orders_by_status');
             Route::get('orders/show/{order}', [Customer\DashboardController::class, 'showPartial'])->name('orders.partial');
             Route::get('track', [Customer\DashboardController::class, 'trackOrder'])->name('track.order');
+            Route::get('purchases', [Customer\PurchasesController::class, 'index'])->name('purchases');
+            Route::get('diamond-codes/{diamondCode}/image', [Customer\DiamondCodeController::class, 'image'])
+                ->name('diamond_codes.image');
             
             
         });
