@@ -26,12 +26,18 @@ class ManualPaymentController extends Controller
     {
         abort_unless(config('bank.enabled'), 404);
 
-        $data = $request->validate([
-            'player_id' => ['required', 'string', 'max:64'],
-            'contact_phone' => ['nullable', 'string', 'max:64'],
-            'contact_email' => ['nullable', 'email', 'max:255'],
+        $isCodes = ($product->service_type ?? null) === 'codes';
+
+        $rules = [
             'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
-        ]);
+        ];
+
+        // For gems top-up we need the player's ID. For codes we don't.
+        if (! $isCodes) {
+            $rules['player_id'] = ['required', 'string', 'max:64'];
+        }
+
+        $data = $request->validate($rules);
 
         try {
             Storage::disk('public')->makeDirectory('manual-payments');
@@ -57,9 +63,10 @@ class ManualPaymentController extends Controller
             'reference' => (string) Str::uuid(),
             'product_id' => $product->id,
             'user_id' => Auth::id(),
-            'player_id' => $data['player_id'],
-            'contact_phone' => $data['contact_phone'] ?? null,
-            'contact_email' => $data['contact_email'] ?? null,
+            // `player_id` is required for gems and not required for codes.
+            'player_id' => $data['player_id'] ?? '-',
+            'contact_phone' => null,
+            'contact_email' => null,
             'amount' => (float) $product->price,
             'currency' => 'SAR',
             'receipt_path' => $receiptPath ?? null,

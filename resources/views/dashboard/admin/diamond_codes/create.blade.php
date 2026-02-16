@@ -33,7 +33,7 @@
             <label class="block text-sm font-extrabold mb-1">منتج الأكواد</label>
             @if($products->isEmpty())
                 <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
-                    لا يوجد منتجات في قسم <b>أكواد الجواهر</b> حتى الآن.
+                    لا يوجد منتجات في قسم <b>أكواد ملابس</b> حتى الآن.
                     <div class="mt-2">
                         أنشئ باقة أكواد من هنا:
                         <a class="font-extrabold underline" href="{{ route('admin.products.create_charge') }}">
@@ -59,17 +59,37 @@
         </div>
 
         <div>
-            <label class="block text-sm font-extrabold mb-1">الكود</label>
-            <textarea name="code" rows="3"
+            <label class="block text-sm font-extrabold mb-1">كود واحد (اختياري)</label>
+            <textarea name="code" rows="2"
                       class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-mono"
-                      placeholder="ضع الكود هنا" required>{{ old('code') }}</textarea>
+                      placeholder="ضع كود واحد هنا">{{ old('code') }}</textarea>
+            <div class="text-xs text-gray-500 mt-1">إذا بدك تضيف دفعة أكواد، استخدم الحقل اللي تحت.</div>
         </div>
 
         <div>
-            <label class="block text-sm font-extrabold mb-1">صورة الكود (اختياري)</label>
+            <label class="block text-sm font-extrabold mb-1">صورة للكود الواحد (اختياري)</label>
             <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp"
                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
             <div class="text-xs text-gray-500 mt-1">حتى 5MB</div>
+        </div>
+
+        <div class="pt-2 border-t border-gray-100">
+            <label class="block text-sm font-extrabold mb-1">دفعة أكواد (اختياري)</label>
+            <textarea name="codes" rows="6"
+                      class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-mono"
+                      placeholder="ضع كل كود بسطر&#10;CODE-1&#10;CODE-2&#10;CODE-3">{{ old('codes') }}</textarea>
+            <div class="text-xs text-gray-500 mt-1">
+                تقدر تضيف 5 أو 10 أكواد دفعة واحدة. سيتم تجاهل الأسطر الفارغة والتكرارات.
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-extrabold mb-1">صور متعددة (اختياري)</label>
+            <input type="file" name="images[]" accept=".jpg,.jpeg,.png,.webp" multiple
+                   class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+            <div class="text-xs text-gray-500 mt-1">
+                إذا رفعت صور متعددة، سيتم ربط كل صورة بالكود حسب ترتيب السطور (الصورة الأولى للكود الأول...).
+            </div>
         </div>
 
         <button class="w-full rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"

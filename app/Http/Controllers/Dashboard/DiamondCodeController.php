@@ -58,21 +58,81 @@ class DiamondCodeController extends Controller
                 'integer',
                 Rule::exists('products', 'id')->where(fn ($q) => $q->where('service_type', 'codes')),
             ],
-            'code' => ['required', 'string', 'max:500', 'unique:diamond_codes,code'],
+            // One code (single) OR multiple codes (one per line)
+            'code' => ['nullable', 'string', 'max:500'],
+            'codes' => ['nullable', 'string', 'max:20000'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'images.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $product = Product::findOrFail($data['product_id']);
 
+        $singleCode = trim((string) ($data['code'] ?? ''));
+        $bulkCodesText = trim((string) ($data['codes'] ?? ''));
+
+        if ($singleCode === '' && $bulkCodesText === '') {
+            return back()->withErrors(['code' => 'ضع كود واحد أو مجموعة أكواد (كل كود بسطر).'])->withInput();
+        }
+
+        Storage::disk('public')->makeDirectory('diamond-codes');
+
+        // Bulk mode
+        if ($bulkCodesText !== '') {
+            $lines = preg_split("/\\r\\n|\\r|\\n/", $bulkCodesText) ?: [];
+            $codes = [];
+            foreach ($lines as $line) {
+                $c = trim($line);
+                if ($c !== '') {
+                    $codes[] = $c;
+                }
+            }
+
+            $codes = array_values(array_unique($codes));
+            if (count($codes) === 0) {
+                return back()->withErrors(['codes' => 'لا يوجد أكواد صالحة داخل النص.'])->withInput();
+            }
+
+            $existing = DiamondCode::query()
+                ->whereIn('code', $codes)
+                ->pluck('code')
+                ->all();
+
+            if (! empty($existing)) {
+                return back()->withErrors(['codes' => 'بعض الأكواد موجودة مسبقًا: '.implode(', ', array_slice($existing, 0, 5)).(count($existing) > 5 ? '...' : '')])->withInput();
+            }
+
+            $images = $request->file('images', []);
+
+            foreach ($codes as $idx => $codeValue) {
+                $imagePath = null;
+                if (isset($images[$idx]) && $images[$idx] && $images[$idx]->isValid()) {
+                    $imagePath = Storage::disk('public')->putFile('diamond-codes', $images[$idx]);
+                }
+
+                DiamondCode::create([
+                    'product_id' => $product->id,
+                    'code' => $codeValue,
+                    'image_path' => $imagePath,
+                    'status' => 'available',
+                ]);
+            }
+
+            return redirect()->route('admin.diamond_codes.index')->with('success', 'تمت إضافة '.count($codes).' كود بنجاح.');
+        }
+
+        // Single mode
+        if (DiamondCode::query()->where('code', $singleCode)->exists()) {
+            return back()->withErrors(['code' => 'هذا الكود موجود مسبقًا.'])->withInput();
+        }
+
         $imagePath = null;
         if ($request->hasFile('image')) {
-            Storage::disk('public')->makeDirectory('diamond-codes');
             $imagePath = Storage::disk('public')->putFile('diamond-codes', $request->file('image'));
         }
 
         DiamondCode::create([
             'product_id' => $product->id,
-            'code' => trim($data['code']),
+            'code' => $singleCode,
             'image_path' => $imagePath,
             'status' => 'available',
         ]);

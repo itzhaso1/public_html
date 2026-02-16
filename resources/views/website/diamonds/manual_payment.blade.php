@@ -52,36 +52,27 @@
 
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h2 class="text-xl font-extrabold text-gray-900">إرسال طلب الدفع اليدوي</h2>
-            <p class="mt-1 text-sm text-gray-600">أدخل الـ ID وارفع إيصال التحويل.</p>
+            <p class="mt-1 text-sm text-gray-600">
+                @if($isCodes)
+                    ارفع إيصال التحويل فقط، وسيتم تسليم الكود بعد الموافقة.
+                @else
+                    أدخل الـ ID وارفع إيصال التحويل.
+                @endif
+            </p>
 
             <form class="mt-4 space-y-4" method="POST" enctype="multipart/form-data"
                   action="{{ route('website.diamonds.manual_payment.store', $product) }}">
                 @csrf
 
-                <div>
-                    <label class="block text-sm font-bold text-gray-800 mb-1">Player ID / ID الحساب</label>
-                    <input type="text" name="player_id" value="{{ old('player_id') }}"
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400/60"
-                           placeholder="مثال: 123456789" required>
-                    @error('player_id')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                @unless($isCodes)
                     <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-1">رقم التواصل (اختياري)</label>
-                        <input type="text" name="contact_phone" value="{{ old('contact_phone') }}"
+                        <label class="block text-sm font-bold text-gray-800 mb-1">Player ID / ID الحساب</label>
+                        <input type="text" name="player_id" value="{{ old('player_id') }}"
                                class="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400/60"
-                               placeholder="واتساب/جوال">
-                        @error('contact_phone')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
+                               placeholder="مثال: 123456789" required>
+                        @error('player_id')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-1">البريد (اختياري)</label>
-                        <input type="email" name="contact_email" value="{{ old('contact_email') }}"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400/60"
-                               placeholder="name@example.com">
-                        @error('contact_email')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
-                    </div>
-                </div>
+                @endunless
 
                 <div>
                     <label class="block text-sm font-bold text-gray-800 mb-1">إيصال التحويل</label>
