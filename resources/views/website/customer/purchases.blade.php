@@ -41,9 +41,11 @@
                         <div class="mt-2 font-extrabold text-gray-900">
                             {{ $mpr->product?->name ?? '—' }}
                         </div>
-                        <div class="text-sm text-gray-600 mt-1">
-                            Player ID: <span class="font-bold select-all">{{ $mpr->player_id }}</span>
-                        </div>
+                        @unless(($mpr->product?->service_type ?? null) === 'codes')
+                            <div class="text-sm text-gray-600 mt-1">
+                                Player ID: <span class="font-bold select-all">{{ $mpr->player_id }}</span>
+                            </div>
+                        @endunless
                     </div>
 
                     <div class="flex flex-col items-start sm:items-end gap-2">
