@@ -3,13 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Cache;
  
 use App\Http\Controllers\Website;
 use App\Http\Controllers\Website\Customer;
 use App\Http\Controllers\PublicProductController;
+use App\Models\Product;
  
 Route::group(
     [
@@ -21,29 +20,15 @@ Route::group(
         ]
     ],
     function () {
- 
-        // ===============================
-        // 🛠️ رابط إصلاح تلقائي (يشغل مرة واحدة تلقائياً عند زيارة الصفحة)
-        // ===============================
-        $fixColumns = function() {
-            try {
-                if (!Schema::hasColumn('products', 'service_type')) {
-                    Schema::table('products', function (Blueprint $table) {
-                        $table->string('service_type')->nullable()->default(null);
-                    });
-                }
-            } catch (\Exception $e) {
-                // تجاهل الخطأ إذا كان العمود موجوداً
-            }
-        };
- 
         // ===============================
         // Clear cache
         // ===============================
-        Route::get('clear-cache', function () {
-            Artisan::call('optimize:clear');
-            return 'Cache cleared!';
-        });
+        if (app()->environment('local')) {
+            Route::get('clear-cache', function () {
+                Artisan::call('optimize:clear');
+                return 'Cache cleared!';
+            });
+        }
  
         // ===============================
         // Auth
@@ -57,29 +42,27 @@ Route::group(
         // ===============================
         // Diamonds Sections ✅ (مصحح ومحمي)
         // ===============================
-        Route::get('diamonds/charge', function () use ($fixColumns) {
-            $fixColumns(); // تأكد من وجود العمود أولاً
- 
-            $products = DB::table('products')
-                ->leftJoin('product_translations', 'products.id', '=', 'product_translations.product_id')
-                ->where('products.service_type', '=', 'gems') // استخدام = صريحة
-                ->where('product_translations.locale', '=', 'ar')
-                ->select('products.*', 'product_translations.name', 'product_translations.description')
-                ->get();
-            
+        Route::get('diamonds/charge', function () {
+            $locale = app()->getLocale();
+            $products = Cache::remember("diamonds.charge.$locale", 60 * 5, function () {
+                return Product::query()
+                    ->where('service_type', 'gems')
+                    ->with(['media', 'translations'])
+                    ->get();
+            });
+
             return view('website.diamonds.charge', compact('products'));
         })->name('website.diamonds.charge');
  
-        Route::get('diamonds/codes', function () use ($fixColumns) {
-            $fixColumns(); // تأكد من وجود العمود أولاً
- 
-            $products = DB::table('products')
-                ->leftJoin('product_translations', 'products.id', '=', 'product_translations.product_id')
-                ->where('products.service_type', '=', 'codes') // استخدام = صريحة
-                ->where('product_translations.locale', '=', 'ar')
-                ->select('products.*', 'product_translations.name', 'product_translations.description')
-                ->get();
- 
+        Route::get('diamonds/codes', function () {
+            $locale = app()->getLocale();
+            $products = Cache::remember("diamonds.codes.$locale", 60 * 5, function () {
+                return Product::query()
+                    ->where('service_type', 'codes')
+                    ->with(['media', 'translations'])
+                    ->get();
+            });
+
             return view('website.diamonds.codes', compact('products'));
         })->name('website.diamonds.codes');
  

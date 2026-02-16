@@ -26,7 +26,7 @@ class AuthController extends Controller
         $credentials = $request->only(['email', 'password']);
         $type = $request->input('type');
         $response = $this->authService->login($credentials, $type);
-        if (isset($response['error'])) {
+        if (($response['error'] ?? false) === true) {
             return $this->errorResponse('Unauthorized', 401);
         }
         $guard = $type === 'admin' ? 'admin-api' : 'user-api';
@@ -135,6 +135,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
+                'status' => 'active',
             ]);
             $user->profile()->create([
                 'user_id' => $user->id,

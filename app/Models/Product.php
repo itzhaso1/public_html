@@ -23,6 +23,7 @@ class Product extends Model implements TranslatableContract {
         'status',
         'published_at',
         'client_number',
+        'service_type',
 
         'erp_id'
         
