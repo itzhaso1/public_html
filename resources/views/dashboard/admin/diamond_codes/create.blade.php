@@ -31,11 +31,31 @@
 
         <div>
             <label class="block text-sm font-extrabold mb-1">منتج الأكواد</label>
-            <select name="product_id" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
-                @foreach($products as $p)
-                    <option value="{{ $p->id }}" @selected(old('product_id') == $p->id)>{{ $p->name }} (ID: {{ $p->id }})</option>
-                @endforeach
-            </select>
+            @if($products->isEmpty())
+                <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
+                    لا يوجد منتجات في قسم <b>أكواد الجواهر</b> حتى الآن.
+                    <div class="mt-2">
+                        أنشئ باقة أكواد من هنا:
+                        <a class="font-extrabold underline" href="{{ route('admin.products.create_charge') }}">
+                            إضافة منتجات الشحن/الأكواد
+                        </a>
+                    </div>
+                </div>
+            @elseif($products->count() === 1)
+                @php($p = $products->first())
+                <input type="hidden" name="product_id" value="{{ $p->id }}">
+                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+                    تم اختيار المنتج تلقائيًا:
+                    <b>{{ $p->name }}</b> (ID: {{ $p->id }})
+                </div>
+            @else
+                <select name="product_id" required class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                    <option value="">-- اختر المنتج --</option>
+                    @foreach($products as $p)
+                        <option value="{{ $p->id }}" @selected(old('product_id') == $p->id)>{{ $p->name }} (ID: {{ $p->id }})</option>
+                    @endforeach
+                </select>
+            @endif
         </div>
 
         <div>
@@ -52,7 +72,8 @@
             <div class="text-xs text-gray-500 mt-1">حتى 5MB</div>
         </div>
 
-        <button class="w-full rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition">
+        <button class="w-full rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                @disabled($products->isEmpty())>
             حفظ
         </button>
     </form>

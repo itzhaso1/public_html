@@ -7,6 +7,7 @@ use App\Models\DiamondCode;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class DiamondCodeController extends Controller
 {
@@ -39,16 +40,29 @@ class DiamondCodeController extends Controller
 
     public function store(Request $request)
     {
+        // If admin didn't choose a product (or there is only one), auto-select.
+        $codesProductIds = Product::query()
+            ->where('service_type', 'codes')
+            ->pluck('id');
+
+        $productId = $request->input('product_id');
+        if (! $productId && $codesProductIds->count() === 1) {
+            $productId = $codesProductIds->first();
+        }
+
+        $request->merge(['product_id' => $productId]);
+
         $data = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where(fn ($q) => $q->where('service_type', 'codes')),
+            ],
             'code' => ['required', 'string', 'max:500', 'unique:diamond_codes,code'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $product = Product::findOrFail($data['product_id']);
-        if (($product->service_type ?? null) !== 'codes') {
-            return back()->withErrors(['product_id' => 'المنتج المختار ليس من قسم أكواد الجواهر.'])->withInput();
-        }
 
         $imagePath = null;
         if ($request->hasFile('image')) {
