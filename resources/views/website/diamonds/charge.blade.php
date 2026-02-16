@@ -1,128 +1,142 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شحن الجواهر</title>
-    <style>
-        body {
-            font-family: 'Tajawal', sans-serif; /* خط عربي جميل إذا كان متاحاً */
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .page-title {
-            text-align: center;
-            margin: 40px 0;
-            color: #333;
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            padding: 10px;
-        }
-        .product-card {
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        .product-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        .product-desc {
-            color: #7f8c8d;
-            font-size: 0.9em;
-            margin-bottom: 15px;
-            min-height: 40px;
-        }
-        .product-price {
-            color: #27ae60;
-            font-weight: bold;
-            font-size: 1.4em;
-            margin: 15px 0;
-        }
-        .buy-btn {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            padding: 12px 25px;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: bold;
-            display: inline-block;
-            transition: background 0.3s;
-            border: none;
-            cursor: pointer;
-        }
-        .buy-btn:hover {
-            background: linear-gradient(45deg, #2980b9, #3498db);
-            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: #95a5a6;
-            font-size: 1.2em;
-        }
-    </style>
-</head>
-<body>
- 
-    <div class="container">
-        <h1 class="page-title">💎 شحن الجواهر</h1>
- 
-        @if(isset($products) && count($products) > 0)
-            <div class="products-grid">
-                @foreach($products as $product)
-                    <div class="product-card">
-                        <div>
-                            <!-- اسم المنتج -->
-                            <div class="product-title">{{ $product->name ?? 'باقة شحن' }}</div>
-                            
-                            <!-- وصف المنتج -->
-                            <p class="product-desc">{{ $product->description ?? 'شحن فوري وآمن' }}</p>
-                            
-                            <!-- السعر -->
-                            <div class="product-price">{{ number_format($product->price, 2) }} ر.س</div>
+@extends('website.layouts.common.website')
+
+@section('pageTitle')
+شحن الجواهر
+@endsection
+
+@section('content')
+@php
+    $fallbackImage = asset('img/قريبا.jpg');
+    $products = $products ?? collect();
+@endphp
+
+@include('website.diamonds.partials.header', [
+    'title' => 'شحن الجواهر',
+    'subtitle' => 'اختر الباقة المناسبة، تنفيذ سريع ودعم عربي.',
+    'active' => 'charge',
+])
+
+<section class="max-w-7xl mx-auto px-4 pb-10" dir="rtl">
+    <div class="bg-white/70 backdrop-blur rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-yellow-400/15 flex items-center justify-center text-yellow-700 font-extrabold">
+                    💎
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">قسم الشحن</div>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-gray-900">باقات شحن الجواهر</h2>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input id="diamondSearch"
+                       type="search"
+                       class="w-full sm:w-80 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400/60"
+                       placeholder="ابحث باسم الباقة...">
+            </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
+            <div class="flex items-center gap-2 bg-white rounded-xl border border-gray-100 p-3">
+                <span class="text-green-600 font-bold">✓</span>
+                <span class="text-gray-700">تنفيذ سريع</span>
+            </div>
+            <div class="flex items-center gap-2 bg-white rounded-xl border border-gray-100 p-3">
+                <span class="text-blue-600 font-bold">✓</span>
+                <span class="text-gray-700">دعم عربي</span>
+            </div>
+            <div class="flex items-center gap-2 bg-white rounded-xl border border-gray-100 p-3">
+                <span class="text-yellow-600 font-bold">✓</span>
+                <span class="text-gray-700">دفع آمن</span>
+            </div>
+        </div>
+    </div>
+
+    @if($products->count() > 0)
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($products as $product)
+                @php
+                    $imageUrl = method_exists($product, 'getMediaUrl')
+                        ? $product->getMediaUrl('product', $product, null, 'media', 'product')
+                        : null;
+                    $productImage = $imageUrl ?: $fallbackImage;
+                    $title = $product->name ?? 'باقة شحن';
+                    $desc = $product->description ?? $product->short_description ?? null;
+                    $descText = $desc ? \Illuminate\Support\Str::limit(trim(strip_tags($desc)), 90) : 'شحن فوري وآمن';
+                @endphp
+
+                <article class="diamond-card bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden"
+                         data-title="{{ mb_strtolower($title) }}">
+                    <a href="{{ route('website.product.show', $product) }}" class="block">
+                        <div class="aspect-[2/1] bg-gray-50">
+                            <img src="{{ $productImage }}"
+                                 alt="{{ $title }}"
+                                 class="w-full h-full object-cover"
+                                 loading="lazy"
+                                 decoding="async">
                         </div>
-                        
-                        <!-- زر الشراء -->
-                        <!-- نستخدم product->id لأن البيانات قادمة من Query Builder -->
+                    </a>
+
+                    <div class="p-4 flex flex-col gap-3">
                         <div>
-                            <a href="{{ route('website.product.show', $product->id) }}" class="buy-btn">
-                                شراء الآن 🛒
+                            <h3 class="font-extrabold text-gray-900 text-base sm:text-lg leading-snug">
+                                {{ $title }}
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-600 leading-relaxed">
+                                {{ $descText }}
+                            </p>
+                        </div>
+
+                        <div class="flex items-end justify-between gap-3">
+                            <div class="text-right">
+                                <div class="text-xs text-gray-500">السعر</div>
+                                <div class="text-lg font-extrabold text-green-600 product-price"
+                                     data-base-price="{{ (float) $product->price }}">
+                                    <span class="current-price">ر.س {{ number_format((float) $product->price, 2) }}</span>
+                                </div>
+                            </div>
+
+                            <a href="{{ route('website.product.show', $product) }}"
+                               class="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-bold text-white hover:bg-yellow-400 hover:text-black transition">
+                                عرض التفاصيل
+                                <span aria-hidden="true">›</span>
                             </a>
                         </div>
                     </div>
-                @endforeach
-            </div>
-        @else
-            <div class="empty-state">
-                <p>عفواً، لا توجد باقات شحن متاحة حالياً.</p>
-            </div>
-        @endif
-    </div>
- 
-</body>
-</html>
+                </article>
+            @endforeach
+        </div>
+    @else
+        <div class="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+            <div class="text-3xl mb-2">💎</div>
+            <h3 class="font-extrabold text-gray-900">لا توجد باقات شحن متاحة حالياً</h3>
+            <p class="text-sm text-gray-600 mt-1">جرّب لاحقاً أو تواصل معنا وسنساعدك.</p>
+            <a href="{{ route('home') }}"
+               class="mt-4 inline-flex items-center justify-center rounded-xl bg-black px-5 py-2.5 text-sm font-bold text-white hover:bg-gray-800 transition">
+                الرجوع للرئيسية
+            </a>
+        </div>
+    @endif
+</section>
+@endsection
+
+@push('js')
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('diamondSearch');
+    const cards = document.querySelectorAll('.diamond-card');
+    if (!input || !cards.length) return;
+
+    const normalize = (s) => (s || '').toString().toLowerCase().trim();
+
+    input.addEventListener('input', () => {
+      const q = normalize(input.value);
+      cards.forEach(card => {
+        const title = normalize(card.dataset.title);
+        card.style.display = !q || title.includes(q) ? '' : 'none';
+      });
+    });
+  });
+</script>
+@endpush
