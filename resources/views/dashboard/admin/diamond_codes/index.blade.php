@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $pageTitle ?? 'أكواد الجواهر' }}</title>
+    <title>{{ $pageTitle ?? 'أكواد ملابس' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-900">
 <main class="max-w-7xl mx-auto p-4 sm:p-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-extrabold">{{ $pageTitle ?? 'أكواد الجواهر' }}</h1>
+            <h1 class="text-2xl font-extrabold">{{ $pageTitle ?? 'أكواد ملابس' }}</h1>
             <p class="text-sm text-gray-600 mt-1">إضافة أكواد جديدة ومتابعة الأكواد المسلّمة.</p>
         </div>
         <div class="flex gap-2">
