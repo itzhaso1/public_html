@@ -39,9 +39,16 @@ class Order extends Model {
         ]);
     }
 
+
     /*public function orderItems() {
         return $this->hasMany(OrderItem::class);
     }*/
+
+    public function order_items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
 
 
     public function addresses() {

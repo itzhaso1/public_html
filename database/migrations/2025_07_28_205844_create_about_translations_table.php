@@ -12,17 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('about_translations', function (Blueprint $table) {
-            $table->foreignId('about_id')->constrained()->onDelete('cascade');
-            $table->string('locale')->index();
+    // $table->foreignId('about_id')->constrained()->onDelete('cascade');
+    $table->unsignedBigInteger('about_id')->nullable();
+    $table->string('locale')->index();
 
-            $table->string('title')->nullable();
-            $table->text('description')->nullable();
-            $table->text('short_description')->nullable();
-            $table->string('content_title')->nullable();
-            $table->text('content_description')->nullable();
-            $table->text('content_note')->nullable();
-            $table->unique(['about_id', 'locale']);
-        });
+    $table->string('title')->nullable();
+    $table->text('description')->nullable();
+    $table->text('short_description')->nullable();
+    $table->string('content_title')->nullable();
+    $table->text('content_description')->nullable();
+    $table->text('content_note')->nullable();
+
+    $table->unique(['about_id', 'locale']);
+});
+
     }
 
     /**

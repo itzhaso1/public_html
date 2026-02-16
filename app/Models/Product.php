@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Concerns\UploadMedia2;
+use App\Models\Concerns\{UploadMedia2, UploadVideoTrait};
 use Astrotomic\Translatable\Translatable;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 class Product extends Model implements TranslatableContract {
-    use HasFactory, UploadMedia2, Translatable;
+    use HasFactory, UploadMedia2, UploadVideoTrait, Translatable;
     protected $table = 'products';
     protected $fillable = [
         'slug',
@@ -21,8 +21,14 @@ class Product extends Model implements TranslatableContract {
         'sku',
         'featured',
         'status',
-        'published_at'
+        'published_at',
+        'client_number',
+
+        'erp_id'
+        
+        
     ];
+    protected $with = ['translations'];
 
     public $translatedAttributes = [
         'name',
@@ -36,6 +42,12 @@ class Product extends Model implements TranslatableContract {
     {
         return $this->morphMany(Media::class, 'mediable');
     }
+
+    public function galleries()
+    {
+        return $this->morphMany(Gallery::class, 'galleriable');
+    }
+
 
     public function category()
     {
@@ -65,4 +77,16 @@ class Product extends Model implements TranslatableContract {
     /*public function categories() {
         return $this->belongsToMany(Category::class, 'category_product');
     }*/
+
+    public function videos()
+    {
+        return $this->hasMany(ProductVideo::class);
+    }
+    
+    public function getImageUrl()
+{
+
+    return asset('public/uploads/product/68f671923ab1a.jpg');
+}
+
 }

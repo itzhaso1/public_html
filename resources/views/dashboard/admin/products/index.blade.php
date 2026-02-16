@@ -4,50 +4,247 @@
     {{ trans('dashboard/admin.product.products') }}
 @endsection
 
+@push('css')
+<style>
+
+/* ====== Mobile polish (أفضل للجوال) ====== */
+ 
+/* مساحة ومظهر الكارد على الشاشات الصغيرة */
+@media (max-width: 576px){
+  #kt_content_container{ padding-left: 12px; padding-right: 12px; }
+  .card{ border-radius: 14px; }
+  .card-body{ padding: 12px !important; }
+}
+ 
+/* الهيدر: ترتيب عمودي + زر أسهل للمس */
+@media (max-width: 992px){
+  .card-header.product-header{
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+ 
+  .card-title{
+    align-items: center !important;
+    width: 100%;
+  }
+ 
+  .btn-add-product{
+    min-height: 48px;              /* touch target */
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+  .btn-add-product i{ font-size: 1.2rem !important; }
+}
+ 
+/* الجدول: خطوط ومسافات أخف على الجوال */
+@media (max-width: 992px){
+  #products-table{
+    font-size: 13px;
+  }
+  #products-table thead th{
+    white-space: nowrap;
+    font-size: 12px;
+    padding: 10px 10px !important;
+  }
+  #products-table tbody td{
+    white-space: nowrap;            /* يمنع التكسير الغريب */
+    padding: 10px 10px !important;
+  }
+}
+ 
+/* لو عندك أعمدة فيها صور/أزرار */
+@media (max-width: 992px){
+  #products-table img{ max-width: 44px; height: auto; border-radius: 8px; }
+  #products-table .btn{ padding: 6px 10px; font-size: 12px; }
+}
+ 
+/* شريط التمرير يكون ألطف */
+.table-wrap{
+  border-radius: 12px;
+}
+/* ====== Header (Mobile-first) ====== */
+.product-header{
+    background: linear-gradient(135deg,#f8fbff,#eef4ff,#ffffff);
+    border-bottom: 1px solid rgba(230,230,255,.7);
+    box-shadow: 0 6px 22px rgba(0,0,0,.06);
+    border-radius: 14px 14px 0 0;
+}
+
+.text-gradient{
+    background: linear-gradient(90deg,#0d6efd,#00c6ff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/* ====== Add button ====== */
+.btn-add-product{
+    background: linear-gradient(135deg,#00c6ff,#0072ff);
+    color:#fff !important;
+    border:none;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-weight: 800;
+    letter-spacing:.3px;
+    box-shadow: 0 10px 24px rgba(0,114,255,.35);
+    transition: transform .2s ease, box-shadow .2s ease;
+    position:relative;
+    overflow:hidden;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    white-space:nowrap;
+}
+.btn-add-product::before{
+    content:"";
+    position:absolute;
+    inset:-60%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 65%);
+    transform: translateX(-60%) rotate(25deg);
+    opacity:0;
+}
+.btn-add-product:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(0,114,255,.45);
+}
+.btn-add-product:hover::before{
+    opacity:1;
+    animation: shineMove 1.1s ease forwards;
+}
+@keyframes shineMove{
+    from{ transform: translateX(-60%) rotate(25deg); opacity:0; }
+    25%{ opacity:1; }
+    to{ transform: translateX(60%) rotate(25deg); opacity:0; }
+}
+.btn-add-product:active{ transform: scale(.98); }
+
+/* ====== Table usability on mobile ====== */
+.table-wrap{
+    overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+}
+.table-wrap::-webkit-scrollbar{ height:8px; }
+.table-wrap::-webkit-scrollbar-thumb{ background:#d9e2ff; border-radius:999px; }
+
+/* أخفي الأعمدة الثقيلة على الجوال فقط */
+@media (max-width: 992px){
+    #products-table thead th:nth-child(4),
+    #products-table tbody td:nth-child(4),
+    #products-table thead th:nth-child(5),
+    #products-table tbody td:nth-child(5),
+    #products-table thead th:nth-child(6),
+    #products-table tbody td:nth-child(6){
+        display:none !important;
+    }
+
+    .product-header{
+        padding: 16px !important;
+    }
+    .product-title{
+        font-size: 1.15rem !important;
+        text-align:center;
+    }
+    .product-subtitle{
+        text-align:center;
+        display:block;
+    }
+    .btn-add-product{
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* اخفاء أزرار DataTables */
+div.dt-buttons{ display:none !important; }
+</style>
+@endpush
+
 @section('content')
     @include('dashboard.layouts.common._partial.messages')
-    <div id="kt_content_container" class="container-xxl">
-        <div class="mb-5 card card-xxl-stretch mb-xl-8">
-            <!--begin::Header-->
-            <div class="pt-5 border-0 card-header">
-                <h3 class="card-title align-items-start flex-column">
-                    <span class="mb-1 card-label fw-bolder fs-3">{{ trans('dashboard/admin.product.products') }}</span>
-                    <span class="mt-1 text-muted fw-bold fs-7">{{ trans('dashboard/admin.product.products') }} ( {{ App\Models\Product::count() }} )</span>
-                    <div class="card-toolbar" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover">
-                        <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-light btn-active-primary">
-                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr075.svg-->
-                            <span class="svg-icon svg-icon-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <rect opacity="0.5" x="11.364" y="20.364" width="16" height="2" rx="1" transform="rotate(-90 11.364 20.364)" fill="black" />
-                                    <rect x="4.36396" y="11.364" width="16" height="2" rx="1" fill="black" />
-                                </svg>
-                            </span>
-                            <!--end::Svg Icon-->
-                            اضافة منتج
-                        </a>
-                    </div>
-                </h3>
-            </div>
-            <!--end::Header-->
 
-            <!--begin::Body-->
-            <div class="py-3 card-body">
-                <!--begin::Table container-->
-                <div class="table-responsive">
-                    <!--begin::Table-->
-                    <table class="table table-striped table-row-bordered gy-5 gs-7">
-                        {!! $dataTable->table() !!}
-                    </table>
-                    <!--end::Table-->
+    <div id="kt_content_container" class="container-xxl">
+        <div class="card card-xxl-stretch mb-8 shadow-sm border-0">
+
+            <div class="card-header product-header border-0 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="card-title align-items-start flex-column m-0">
+                    <h3 class="fw-bolder mb-1 text-gradient product-title">المنتجات</h3>
+                    <span class="text-muted fw-bold fs-7 product-subtitle">
+                        {{ trans('dashboard/admin.product.products') }} ( {{ \App\Models\Product::count() }} )
+                    </span>
                 </div>
-                <!--end::Table container-->
+
+                <a href="{{ route('admin.products.create') }}" class="btn btn-add-product">
+                    <i class="bi bi-plus-circle-fill fs-4"></i>
+                    <span>إضافة منتج جديد</span>
+                </a>
             </div>
-            <!--begin::Body-->
+
+            <div class="card-body py-4">
+                <div class="table-wrap">
+                    {!! $dataTable->table(['id' => 'products-table', 'class' => 'table table-striped table-row-bordered gy-5 gs-7 align-middle text-center w-100']) !!}
+                </div>
+            </div>
+
         </div>
     </div>
 @endsection
 
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
 {!! $dataTable->scripts() !!}
+
+<script>
+$(function () {
+    // يمسك نفس الجدول (بدون إعادة تهيئة)
+    const table = $('#products-table').DataTable();
+
+    $(document).on('click', '.btn-delete', function (e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+
+        Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: 'سيتم حذف هذا المنتج نهائيًا!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'نعم، احذفه!',
+            cancelButtonText: 'إلغاء'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                data: { _token: '{{ csrf_token() }}' },
+                beforeSend: () => {
+                    Swal.fire({
+                        title: 'جاري الحذف...',
+                        text: 'يرجى الانتظار قليلًا',
+                        icon: 'info',
+                        showConfirmButton: false,
+                        allowOutsideClick: false
+                    });
+                },
+                success: (response) => {
+                    Swal.close();
+                    if (response && response.success) {
+                        toastr.success('تم حذف المنتج بنجاح');
+                        table.ajax.reload(null, false);
+                    } else {
+                        toastr.error('حدث خطأ أثناء الحذف');
+                    }
+                },
+                error: () => {
+                    Swal.close();
+                    toastr.error('فشل في الحذف، حاول لاحقًا');
+                }
+            });
+        });
+    });
+});
+</script>
 @endpush

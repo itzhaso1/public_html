@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\{Product, Category, Brand};
+use App\Models\{Product, Category, Coupon};
 use App\Services\Contracts\CartInterface;
 use Cart;
 class CartController extends Controller {
@@ -15,6 +15,14 @@ class CartController extends Controller {
     public function index() {
         $items = $this->cartInterface->get();
         $total = $this->cartInterface->total();
+        $couponId = session('coupon_id');
+        $discountedTotal = null;
+        if ($couponId) {
+            $coupon = Coupon::find($couponId);
+            if ($coupon) {
+                $discountedTotal = $this->cartInterface->applyCoupon($coupon);
+            }
+        }
         $categories = Category::with(['translations', 'media', 'children.translations'])
             ->whereNull('parent_id')
             ->where('status', 'active')
@@ -54,4 +62,28 @@ class CartController extends Controller {
     public function destroy($id) {
         return $this->cartInterface->delete($id);
     }
+
+    public function applyCoupon(Request $request) {
+        $coupon = Coupon::where('code', $request->coupon_code)->first();
+        if (!$coupon) {
+            return response()->json(['error' => 'الكوبون غير صالح'], 400);
+        }
+        session()->put('coupon_id', $coupon->id);
+        $discountedTotal = $this->cartInterface->applyCoupon($coupon);
+        return response()->json([
+            'message' => 'تم تطبيق الكوبون بنجاح',
+            'discounted_total' => $discountedTotal,
+            'total' => $this->cartInterface->total(),
+        ]);
+    }
+
+    public function clearCart(Request $request) {
+        $this->cartInterface->empty();
+        //session()->forget('applied_coupon');
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تفريغ السلة بنجاح.'
+        ]);
+    }
+
 }

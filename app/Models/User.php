@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 //use Laravel\Passport\HasApiTokens;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+//use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject {
+class User extends Authenticatable /*implements JWTSubject*/ {
     use HasFactory, /*HasApiTokens,*/ Notifiable;
     protected $fillable = [
         'name',
@@ -37,11 +37,11 @@ class User extends Authenticatable implements JWTSubject {
         return $this->hasOne(UserProfile::class, 'user_id');
     }
 
-    public function getJWTIdentifier() {
+    /*public function getJWTIdentifier() {
         return $this->getKey();
     }
 
     public function getJWTCustomClaims() {
         return [];
-    }
+    }*/
 }

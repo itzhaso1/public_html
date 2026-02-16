@@ -6,181 +6,205 @@ use App\Models\{Product, Category, Type, Brand, Tag};
 use App\Services\Contracts\ProductInterface;
 use Illuminate\Http\Request;
 use App\DataTables\Dashboard\Admin\ProductDataTable;
-use Illuminate\Support\Facades\DB;
+use App\Models\Concerns\UploadVideoTrait;
+use Illuminate\Support\Str;
 
-class ProductRepository implements ProductInterface {
-    public function index(ProductDataTable $productDataTable) {
+class ProductRepository implements ProductInterface
+{
+    use UploadVideoTrait;
+
+    /* =========================
+     * Index
+     * ========================= */
+    public function index(ProductDataTable $productDataTable)
+    {
         return $productDataTable->render('dashboard.admin.products.index', [
             'pageTitle' => trans('dashboard/admin.product.products'),
         ]);
     }
 
-    public function create() {
-        $data = [
-            'categories' => Category::active()->get(),
-            'types' => Type::get(),
-            'brands' => Brand::all(),
-            'tags'       => Tag::all(),
-        ];
-        return view('dashboard.admin.products.form', ['pageTitle' => 'إضافة منتج', 'data' => $data]);
+    /* =========================
+     * Create
+     * ========================= */
+    public function create()
+    {
+        return view('dashboard.admin.products.form', [
+            'pageTitle' => 'إضافة منتج',
+            'data' => [
+                'categories' => Category::active()->get(),
+                'types'      => Type::all(),
+                'brands'     => Brand::all(),
+                'tags'       => Tag::all(),
+            ],
+        ]);
     }
-    /*public function store(Request $request) {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'alt_name' => 'nullable|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'categories' => 'required|array',
-            'categories.*' => 'exists:categories,id',
-            'types' => 'nullable|array',
-            'types.*' => 'exists:types,id',
-            'extras' => 'nullable|array',
-            'extras.*' => 'exists:extras,id',
-            'description' => 'nullable|string',
-            'short_description' => 'nullable|string',
-            'sizes' => 'nullable|array',
-            'sizes.*.size_id' => 'exists:sizes,id',
-            'sizes.*.price' => 'required_if:sizes.*.size_id,!null|numeric|min:0',
-            'loyalty_points' => 'nullable',
-        ]);
-        $product = Product::create([
-            'name' => $validatedData['name'],
-            'description' => $validatedData['description'] ?? null,
-            'short_description' => $validatedData['short_description'] ?? null,
-            'price' => $validatedData['price'],
-            'loyalty_points' => $validatedData['loyalty_points']
-        ]);
-        $product->categories()->attach($validatedData['categories']);
-        if (!empty($validatedData['types'])) {
-            $product->types()->attach($validatedData['types']);
-        }
-        if (!empty($validatedData['extras'])) {
-            $product->extras()->attach($validatedData['extras']);
-        }
-        if (!empty($validatedData['sizes'])) {
-            $sizesData = [];
-            foreach ($validatedData['sizes'] as $size) {
-                $sizesData[$size['size_id']] = ['price' => $size['price']];
-            }
-            $product->sizes()->attach($sizesData);
-        }
-        if ($request->hasFile('product'))
-            $product->uploadMedia($request->file('product'), 'product', 'root');
-        return redirect()->route('admin.products.index')->with('success', 'تم حفظ بنجاح!');
-    }*/
 
-    public function store(Request $request) {
+    /* =========================
+     * Store
+     * ========================= */
+    public function store(Request $request)
+    {
         $data = $this->extractData($request);
         $product = Product::create($data);
+
+        // الوسوم
         $product->tags()->sync($request->input('tags', []));
+
+        // الصورة الرئيسية
         if ($request->hasFile('product')) {
-            $product->uploadSingleMedia('product', $request->file('product'), $product, null, 'media', true);
+            $media = $product->uploadSingleMedia(
+                'product',
+                $request->file('product'),
+                $product,
+                null,
+                'media',
+                true
+            );
+
+            if ($media) {
+                $imagePath = public_path("uploads/product/{$media}");
+                $this->addWatermark($imagePath);
+            }
         }
 
-        return redirect()->route('admin.products.index')->with('success', 'تم إضافة المنتج بنجاح');
-    }
-
-    public function update(Request $request, Product $product) {
-        $data = $this->extractData($request);
-        $product->update($data);
-        $product->tags()->sync($request->input('tags', []));
-        if ($request->hasFile('product')) {
-            $product->updateSingleMedia('product', $request->file('product'), $product, null, 'media', true);
+        // صور المعرض
+        if ($request->hasFile('gallery')) {
+            $product->uploadMultipleMedia(
+                'product/gallery',
+                $request->file('gallery'),
+                $product,
+                'media',
+                false,
+                true,
+                'gallery'
+            );
         }
-        return redirect()->route('admin.products.index')->with('success', 'تم تحديث المنتج بنجاح');
+
+        // الفيديو
+        if ($request->hasFile('video')) {
+            $product->uploadVideo($request->file('video'));
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'تم إضافة المنتج بنجاح');
     }
 
+    /* =========================
+     * Update (الدالة الوحيدة الصحيحة)
+     * ========================= */
+    public function update(Request $request, Product $product)
+{
+    $data = $this->extractData($request);
+    $product->update($data);
 
+    // الوسوم
+    $product->tags()->sync($request->input('tags', []));
+
+    // تحديث الصورة الرئيسية
+    if ($request->hasFile('product')) {
+        $media = $product->updateSingleMedia(
+            'product',
+            $request->file('product'),
+            $product,
+            null,
+            'media',
+            true
+        );
+
+        if ($media) {
+            $imagePath = public_path("uploads/product/{$media}");
+            $this->addWatermark($imagePath);
+        }
+    }
+$galleryFiles = $request->file('gallery');
+
+if (is_array($galleryFiles)) {
+
+    // نتحقق أن فيه ملفات مرفوعة فعليًا
+    $validFiles = array_filter($galleryFiles, function ($file) {
+        return $file && $file->isValid();
+    });
+
+    if (count($validFiles) > 0) {
+
+        // 🔥 حذف كل الصور القديمة
+        $product->deleteExistingMedia(
+            'gallery',
+            $product,
+            null,
+            'media',
+            true,
+            'gallery'
+        );
+
+        // 🔥 رفع الصور الجديدة فقط
+        $product->uploadMultipleMedia(
+            'product/gallery',
+            $validFiles,
+            $product,
+            'media',
+            false,
+            true,
+            'gallery'
+        );
+    }
+}
+
+
+
+    // ✅ حل مشكلة الفيديو (حذف القديم + رفع الجديد)
+    // ✅ تحديث الفيديو (حذف أي فيديو قديم مهما كان اسمه)
+if ($request->hasFile('video')) {
+
+    foreach ($product->media as $media) {
+        if (str_starts_with($media->mime_type, 'video')) {
+            $media->delete();
+        }
+    }
+
+    // رفع الفيديو الجديد
+    $product->uploadVideo($request->file('video'));
+}
+
+
+    return redirect()->route('admin.products.index')
+        ->with('success', 'تم تحديث المنتج بنجاح');
+}
+
+    /* =========================
+     * Edit
+     * ========================= */
     public function edit(Product $product)
     {
-        $data = [
-            'categories' => Category::active()->get(),
-            'types' => Type::get(),
-            'brands' => Brand::all(),
-            'tags' => Tag::all(),
-        ];
-
         $product->load(['tags', 'media']);
 
         return view('dashboard.admin.products.form', [
             'pageTitle' => 'تعديل منتج',
-            'product' => $product,
-            'data' => $data,
+            'product'   => $product,
+            'data' => [
+                'categories' => Category::active()->get(),
+                'types'      => Type::all(),
+                'brands'     => Brand::all(),
+                'tags'       => Tag::all(),
+            ],
         ]);
     }
 
-    /*public function update(Request $request, Product $product) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'alt_name' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'short_description' => 'nullable|string|max:500',
-            'price' => 'required|numeric|min:0',
-            'sizes' => 'nullable|array',
-            'sizes.*.size_id' => 'exists:sizes,id',
-            'sizes.*.price' => 'required|numeric|min:0',
-            'categories' => 'nullable|array',
-            'categories.*' => 'exists:categories,id',
-            'types' => 'nullable|array',
-            'types.*' => 'exists:types,id',
-            'extras' => 'nullable|array',
-            'extras.*' => 'exists:extras,id',
-            'loyalty_points' => 'nullable',
-        ]);
-        try {
-            DB::beginTransaction();
-            $product->update([
-                'name' => $request->name,
-                'alt_name' => $request->alt_name,
-                'description' => $request->description,
-                'short_description' => $request->short_description,
-                'price' => $request->price,
-                'loyalty_points' => $request->loyalty_points
-            ]);
-
-            $sizes = [];
-            if ($request->has('sizes')) {
-                foreach ($request->sizes as $size) {
-                    $sizes[$size['size_id']] = ['price' => $size['price']];
-                }
-                $product->sizes()->sync($sizes);
-            }
-
-            if ($request->has('categories')) {
-                $product->categories()->sync($request->categories);
-            }
-
-            if ($request->has('types')) {
-                $product->types()->sync($request->types);
-            }
-
-            if ($request->has('extras')) {
-                $product->extras()->sync($request->extras);
-            }
-
-            if ($request->hasFile('product'))
-                $product->updateMedia($request->file('product'), 'product', 'root');
-            DB::commit();
-            return redirect()->route('admin.products.index')->with('success', 'تم حفظ بنجاح!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', '!حدث خطأ ما');
-        }
-        $product->update([
-            'name' => $request->name,
-            'type' => $request->type,
-            'price' => (float) $request->price,
-        ]);
-
-    }*/
-
-
+    /* =========================
+     * Destroy
+     * ========================= */
     public function destroy(Product $product)
     {
         $product->deleteExistingMedia('product', $product, null, 'media', true, 'product');
         $product->delete();
-        return redirect()->route('admin.products.index')->with('success', 'تم الحذف بنجاح!');
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'تم الحذف بنجاح!');
     }
 
+    /* =========================
+     * Extract Data
+     * ========================= */
     private function extractData(Request $request)
     {
         $data = $request->only([
@@ -193,17 +217,93 @@ class ProductRepository implements ProductInterface {
             'sku',
             'status',
             'featured',
-            'slug'
+            'slug',
+            'client_number',
         ]);
 
-        // نضيف قيمة الـ featured كـ boolean
         $data['featured'] = $request->has('featured');
 
-        // نضيف الترجمة لكل لغة
         foreach (config('translatable.locales') as $locale) {
             $data[$locale] = $request->input($locale);
         }
 
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($request->input('ar.name', 'product-' . uniqid()));
+        } elseif (Product::where('slug', $data['slug'])->exists()) {
+            $data['slug'] .= '-' . uniqid();
+        }
+
         return $data;
+    }
+
+    /* =========================
+     * Watermark
+     * ========================= */
+    private function addWatermark($imagePath)
+    {
+        try {
+            $logoPath = public_path('watermark/logo.png');
+
+            if (!file_exists($imagePath) || !file_exists($logoPath)) {
+                return;
+            }
+
+            $info = getimagesize($imagePath);
+            $mime = $info['mime'];
+
+            $image = $mime === 'image/png'
+                ? imagecreatefrompng($imagePath)
+                : imagecreatefromjpeg($imagePath);
+
+            $logo = imagecreatefrompng($logoPath);
+
+            imagesavealpha($image, true);
+            imagealphablending($image, true);
+            imagesavealpha($logo, true);
+            imagealphablending($logo, true);
+
+            $imageWidth  = imagesx($image);
+            $imageHeight = imagesy($image);
+            $logoWidth   = imagesx($logo);
+            $logoHeight  = imagesy($logo);
+
+            $newLogoWidth  = intval($imageWidth * 0.2);
+            $scale         = $newLogoWidth / $logoWidth;
+            $newLogoHeight = intval($logoHeight * $scale);
+
+            $resizedLogo = imagecreatetruecolor($newLogoWidth, $newLogoHeight);
+            imagesavealpha($resizedLogo, true);
+            imagefill($resizedLogo, 0, 0, imagecolorallocatealpha($resizedLogo, 0, 0, 0, 127));
+
+            imagecopyresampled(
+                $resizedLogo,
+                $logo,
+                0, 0, 0, 0,
+                $newLogoWidth,
+                $newLogoHeight,
+                $logoWidth,
+                $logoHeight
+            );
+
+            $y = intval($imageHeight * 0.11);
+
+            $x1 = $imageWidth - $newLogoWidth - 20;
+            imagecopy($image, $resizedLogo, $x1, $y, 0, 0, $newLogoWidth, $newLogoHeight);
+
+
+            $x2 = intval(($imageWidth - $newLogoWidth) / 2) + 40;
+imagecopy($image, $resizedLogo, $x2, $y, 0, 0, $newLogoWidth, $newLogoHeight);
+
+            $mime === 'image/png'
+                ? imagepng($image, $imagePath, 9)
+                : imagejpeg($image, $imagePath, 90);
+
+            imagedestroy($image);
+            imagedestroy($logo);
+            imagedestroy($resizedLogo);
+
+        } catch (\Exception $e) {
+            // تجاهل الخطأ
+        }
     }
 }

@@ -97,10 +97,12 @@ class DashboardController extends Controller {
         ]);
         
     }*/
-    public function trackOrder(Request $request)
-    {
+    public function trackOrder(Request $request) {
+        $request->validate([
+            'number' => 'required',
+        ]);
         $order = Order::where('number', $request->number)
-            ->where('user_id', auth()->id())    
+            ->when(auth()->check(), fn($q) => $q->where('user_id', auth()->id()))
             ->with([
                 'user',
                 'coupon',

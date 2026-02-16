@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Website;
 
+use App\Services\Services\ERP\ERPService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\{Order,OrderItem, Category, Coupon};
@@ -87,12 +88,51 @@ class CheckoutController extends Controller {
             }
             DB::commit();
             $this->cartInterface->empty();
+            // الآن أرسل الطلب للـ ERP
+            $erpService = new ERPService();
+            $erpResponse = $erpService->sendOrder($order);
+            // يمكنك التعامل مع الاستجابة كما تريد، مثلاً تسجيلها أو إرسال رسالة للمستخدم
+            if (!$erpResponse['success']) {
+                // سجل الخطأ في اللوغ مثلاً
+                \Log::error('Failed to send order to ERP', $erpResponse);
+            }
             return redirect()->route('shop.index')->with([
-                'success' => trans('site/site.product_add_successfully')
+                'success' => trans('site/site.checkout_successfully')
             ]);
         /*} catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', '!حدث خطأ ما');
         }*/
+    }
+
+    public function applyCoupon(Request $request) {
+        $code = $request->input('coupon_code');
+        $coupon = Coupon::where('code', $code)->first();
+
+        if (!$coupon || $coupon->status != 'active') {
+            return response()->json(['success' => false, 'message' => 'الكوبون غير صالح أو غير مفعل']);
+        }
+
+        $now = now();
+        if ($coupon->starts_at && $now->lt($coupon->starts_at)) {
+            return response()->json(['success' => false, 'message' => 'الكوبون غير مفعل بعد']);
+        }
+        if ($coupon->expires_at && $now->gt($coupon->expires_at)) {
+            return response()->json(['success' => false, 'message' => 'انتهت صلاحية الكوبون']);
+        }
+
+        $total = $this->cartInterface->total();
+        if ($coupon->min_spend && $total < $coupon->min_spend) {
+            return response()->json(['success' => false, 'message' => 'الحد الأدنى لتفعيل الكوبون هو ' . $coupon->min_spend . ' جنيه']);
+        }
+        if ($coupon->max_spend && $total > $coupon->max_spend) {
+            return response()->json(['success' => false, 'message' => 'الحد الأقصى لاستخدام الكوبون هو ' . $coupon->max_spend . ' جنيه']);
+        }
+        session()->put('applied_coupon', $coupon->id);
+        $discountedTotal = $this->cartInterface->applyCoupon($coupon);
+        return response()->json([
+            'success' => true,
+            'discounted_total' => number_format($discountedTotal, 2)
+        ]);
     }
 }

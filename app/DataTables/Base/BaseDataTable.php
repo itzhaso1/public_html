@@ -12,7 +12,7 @@ abstract class BaseDataTable extends DataTable
 {
     public function __construct(protected Model $model)
     {
-        $model = $this->model;
+        $this->model = $model;
     }
 
     abstract protected function dataTable(QueryBuilder $query): EloquentDataTable;
@@ -22,7 +22,7 @@ abstract class BaseDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         return $this->builder()
-            ->setTableId($this->model->getTable().'_datatable')
+            ->setTableId($this->model->getTable() . '_datatable')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->parameters($this->getParameters());
@@ -30,65 +30,48 @@ abstract class BaseDataTable extends DataTable
 
     abstract protected function getColumns(): array;
 
-    protected function getParameters()
+    /**
+     * ✅ إعدادات DataTable بدون Buttons
+     * (حل نهائي لمشكلة اختفاء البيانات)
+     */
+    protected function getParameters(): array
     {
         return [
-            'dom' => 'Blfrtip',
-            'lengthMenu' => [
-                [10, 25, 50, 100, 500, 750, -1],
-                ['10', '25 ', '50 ', '100 ', '500 ', '750', trans('dashboard/datatable.all_records')],
-            ],
-            'buttons' => [
-                [
-                    'extend' => 'csv',
-                    'className' => 'btn btn-primary',
-                    'text' => "<i class='fa fa-file'></i>".trans('dashboard/datatable.ex_csv'),
-                ],
-                [
-                    'extend' => 'excel',
-                    'className' => 'btn btn-success',
-                    'text' => "<i class='fa fa-file'></i>".trans('dashboard/datatable.ex_excel'),
-                ],
-                [
-                    'extend' => 'print',
-                    'className' => 'btn btn-info',
-                    'text' => "<i class='fa fa-print'></i>".trans('dashboard/datatable.print'),
-                ],
-                [
-                    'extend' => 'reload',
-                    'className' => 'btn btn-dark',
-                    'text' => "<i class='fa fa-sync-alt'></i>".trans('dashboard/datatable.reload'),
-                ],
-            ],
+            'dom' => 'lfrtip',
+            'processing' => true,
+            'serverSide' => true,
+            'responsive' => true,
             'language' => datatable_lang(),
         ];
     }
 
     protected function filename(): string
     {
-        return $this->model->getTable().'_'.date('YmdHis');
+        return $this->model->getTable() . '_' . date('YmdHis');
     }
 
-    // Helper Function to set badge
+    /* ================= Helpers ================= */
+
     protected function formatBadge($value): string
     {
-        $badge = $value == null ? 'danger' : 'success';
-        if ($value == null) {
-            return '<span class="badge badge-'.$badge.'">'.trans('dashboard/datatable.no_date_found').'</span>';
+        if (!$value) {
+            return '<span class="badge badge-danger">'
+                . trans('dashboard/datatable.no_date_found') .
+                '</span>';
         }
 
-        return '<span class="badge badge-'.$badge.'">'.$value.'</span>';
+        return '<span class="badge badge-success">' . e($value) . '</span>';
     }
 
-    protected function formatColoredBadge(string $text, string $color = 'secondary'): string {
-        return '<span class="badge badge-' . $color . '">' . $text . '</span>';
+    protected function formatColoredBadge(string $text, string $color = 'secondary'): string
+    {
+        return '<span class="badge badge-' . e($color) . '">' . e($text) . '</span>';
     }
 
     protected function formatStatus($status): string
     {
-        $badge = $status == 'active' ? 'success' : 'primary';
-
-        return '<span class="badge badge-'.$badge.'">'.$status.'</span>';
+        $badge = $status === 'active' ? 'success' : 'secondary';
+        return '<span class="badge badge-' . $badge . '">' . e($status) . '</span>';
     }
 
     protected function formatDate($value): string

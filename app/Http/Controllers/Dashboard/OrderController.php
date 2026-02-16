@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Services\Services\ERP\ERPService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\DataTables\Dashboard\General\OrderDataTable;
@@ -10,6 +11,12 @@ use App\Models\Order;
 use Illuminate\Validation\Rule;
 use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as PDF;
 class OrderController extends Controller {
+    protected $erpService;
+
+    public function __construct(ERPService $erpService)
+    {
+        $this->erpService = $erpService;
+    }
     public function index(OrderDataTable $dataTable) {
         return $dataTable->render('dashboard.general.orders.index', ['pageTitle' => 'الطلبات']);
     }
@@ -66,22 +73,6 @@ class OrderController extends Controller {
         ]);
     }
 
-    /*public function generate($id) {
-        $order = Order::with([
-            'user',
-            'coupon',
-            'addresses',
-            'products.category',
-            'products.brand',
-            'products.sections',
-        ])->findOrFail($id);
-
-        $pdf = PDF::loadView('dashboard.general.orders.invoices', [
-            'order' => $order,
-            'locale' => app()->getLocale(),
-        ]);
-        return $pdf->stream('invoice.pdf');
-    }*/
     public function generate($id)
     {
         $order = Order::with([
@@ -104,5 +95,18 @@ class OrderController extends Controller {
         ]);
 
         return $pdf->stream("invoice-{$order->number}.pdf");
+    }
+
+    public function sendOrderToERP($orderId)
+    {
+        $order = Order::with(['order_items', 'order_addresses', 'coupon'])->findOrFail($orderId);
+
+        $result = $this->erpService->sendOrder($order);
+
+        if ($result['success']) {
+            return response()->json(['message' => 'Order sent to ERP successfully', 'response' => $result['json']]);
+        }
+
+        return response()->json(['error' => 'Failed to send order to ERP', 'details' => $result], 500);
     }
 }

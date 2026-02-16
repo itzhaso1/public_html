@@ -1,171 +1,525 @@
 @extends('website.layouts.common.website')
-@section('css')
 
-@endsection
+@push('css')
+<style>
+    .reviewsSwiper {
+        padding-bottom: 40px;
+    }
+
+    .reviewsSwiper .swiper-slide {
+        transition: all 0.4s ease;
+    }
+
+    .reviewsSwiper .swiper-slide-active {
+        transform: scale(1.03);
+        background: #fffef7;
+        border-color: #facc15;
+    }
+
+    .reviewsSwiper .swiper-pagination {
+        position: relative !important;
+        bottom: 0 !important;
+        margin-top: 1rem;
+        margin-bottom: -10px;
+        text-align: center;
+    }
+
+    .reviewsSwiper .swiper-pagination-bullet {
+        background: #d1d5db;
+        opacity: 1;
+        width: 8px;
+        height: 8px;
+        margin: 0 4px !important;
+        transition: all 0.3s ease;
+    }
+
+    .reviewsSwiper .swiper-pagination-bullet-active {
+        background: #facc15;
+        width: 12px;
+        height: 12px;
+    }
+
+    /* تثبيت أبعاد السلايدر لتقليل CLS */
+    .home-hero-swiper {
+        aspect-ratio: 2 / 1;
+        min-height: 300px;
+    }
+
+    .home-hero-swiper .swiper-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        display: block;
+    }
+</style>
+@endpush
 
 @section('pageTitle')
-{{$pageTitle}}
+{{ $pageTitle }}
 @endsection
 
 @section('content')
-    <!-- Start Slider -->
-    <div class="background-light-gray-color rts-section-gap bg_light-1 pt_sm--20">
-        <!-- rts banner area start -->
-        <div class="rts-banner-area-one mb--30">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="category-area-main-wrapper-one">
-                            <div class="swiper mySwiper-category-1 swiper-data" data-swiper='{
-                                    "spaceBetween":1,
-                                    "slidesPerView":1,
-                                    "loop": true,
-                                    "speed": 2000,
-                                    "dir": "rtl",
-                                    "autoplay":{
-                                        "delay":"4000"
-                                    },
-                                    "navigation":{
-                                        "nextEl":".swiper-button-next",
-                                        "prevEl":".swiper-button-prev"
-                                    },
-                                    "breakpoints":{
-                                    "0":{
-                                        "slidesPerView":1,
-                                        "spaceBetween": 0},
-                                    "320":{
-                                        "slidesPerView":1,
-                                        "spaceBetween":0},
-                                    "480":{
-                                        "slidesPerView":1,
-                                        "spaceBetween":0},
-                                    "640":{
-                                        "slidesPerView":1,
-                                        "spaceBetween":0},
-                                    "840":{
-                                        "slidesPerView":1,
-                                        "spaceBetween":0},
-                                    "1140":{
-                                        "slidesPerView":1,
-                                        "spaceBetween":0}
-                                    }
-                                }'>
-                                <div class="swiper-wrapper">
-                                    @forelse ($sliders as $slider)
-                                    <div class="swiper-slide">
-                                        <div class="banner-bg-image bg_image bg_one-banner ptb--120 ptb_md--80 ptb_sm--60"
-                                            style="background-image: url('{{ $slider->getMediaUrl('slider', $slider, null, 'media', 'slider') }}'); background-size: cover; background-position: center;">
-                                            <div class="banner-one-inner-content">
-                                                <span class="pre">{{ $slider->description ?? ' ' }}
-                                                    }}</span>
-                                                <h1 class="title">
-                                                    {{ $slider->name ?? ' ' }} <br>
-                                                </h1>
-                                                {{--<a href="#" class="rts-btn btn-primary radious-sm with-icon">
-                                                    <div class="btn-text">
-                                                        {{ __('Shop Now') }}
-                                                    </div>
-                                                    <div class="arrow-icon">
-                                                        <i class="fa-light fa-arrow-right"></i>
-                                                    </div>
-                                                    <div class="arrow-icon">
-                                                        <i class="fa-light fa-arrow-right"></i>
-                                                    </div>
-                                                </a>--}}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @empty
-                                    <div class="swiper-slide">
-                                        <div class="banner-bg-image bg_image ptb--120 ptb_md--80 ptb_sm--60"
-                                            style="background-color: #f3f3f3; display: flex; align-items: center; justify-content: center;">
-                                            <h4 class="text-muted">{{ __('لا توجد سلايدر حالياً') }}</h4>
-                                        </div>
-                                    </div>
-                                    @endforelse
-                                </div>
-                                <button class="swiper-button-next"><i class="fa-regular fa-arrow-right"></i></button>
-                                <button class="swiper-button-prev"><i class="fa-regular fa-arrow-left"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- rts banner area end -->
-        <!-- rts category area start -->
-        <div class="rts-caregory-area-one">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        @php
-                            $categoryCount = $categories->count();
-                            $slidesPerView = $categoryCount < 10 ? $categoryCount : 10; $swiperOptions=[ 'spaceBetween'=> 12,
-                                'slidesPerView' => $slidesPerView,
-                                'loop' => true,
-                                'speed' => 1000,
-                                'breakpoints' => [
-                                '0' => ['slidesPerView' => 2, 'spaceBetween' => 12],
-                                '320' => ['slidesPerView' => 2, 'spaceBetween' => 12],
-                                '480' => ['slidesPerView' => 3, 'spaceBetween' => 12],
-                                '640' => ['slidesPerView' => 4, 'spaceBetween' => 12],
-                                '840' => ['slidesPerView' => 4, 'spaceBetween' => 12],
-                                '1140' => ['slidesPerView' => $slidesPerView, 'spaceBetween' => 12],
-                                ]
-                                ];
-                        @endphp
-                        <div class="category-area-main-wrapper-one">
-                            <div class="swiper mySwiper-category-1 swiper-data" data-swiper='@json($swiperOptions)'>
-                                <div class="swiper-wrapper">
-                                    @forelse($categories as $category)
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('shop.index', ['category_id' => $category->id]) }}" class="single-category-one">
-                                            <img src="{{ $category->getMediaUrl('category', $category, null, 'media', 'category') }}"
-                                                alt="{{ $category->name }}">
-                                            <p>{{ $category->name }}</p>
-                                        </a>
-                                    </div>
-                                    @empty
-                                    <div class="swiper-slide">
-                                        <p class="text-center text-muted">لا توجد فئات مميزة حالياً</p>
-                                    </div>
-                                    @endforelse
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- rts category area end -->
-    </div>
-    <!-- End Slider -->
+@php
+    $fallbackImage = asset('img/قريبا.jpg');
+@endphp
 
-    <!-- Start Featured Category -->
-    <div class="rts-feature-area rts-section-gap">
-        <div class="container">
+<!-- السلايدر -->
+<div class="my-4 px-2">
+    <div class="swiper-container home-hero-swiper">
+        <div class="swiper-wrapper">
+            @foreach($sliders as $slider)
+                @php
+                    $imageUrl = $slider->getMediaUrl('slider', $slider, null, 'media', 'slider');
+                    $sliderImage = $imageUrl ?: $fallbackImage;
+                @endphp
+                @if($imageUrl)
+                    <div class="swiper-slide flex justify-center">
+                        <img src="{{ $sliderImage }}"
+                             alt="{{ $slider->name ?? 'slider' }}"
+                             width="1200" height="600"
+                             loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                             fetchpriority="{{ $loop->first ? 'high' : 'auto' }}"
+                             decoding="async">
+                    </div>
+                @endif
+            @endforeach
         </div>
     </div>
-    <!-- End Featured Category -->
+</div>
 
-    <!-- rts grocery feature area start -->
+<!-- اختيار العملة -->
+<div class="px-4 py-4 flex flex-row-reverse items-center justify-center gap-4 bg-gradient-to-l from-yellow-50 to-white rounded-lg shadow-md border border-gray-200">
+    <span class="font-bold text-base text-gray-800">اختر عملة بلدك</span>
+
+    <button class="currency-btn bg-white hover:bg-yellow-100 p-1.5 rounded-full shadow transition-all duration-200 border border-gray-200 hover:scale-105 ring-2 ring-yellow-500"
+            data-symbol="ر.س" data-rate="1" data-country="SA" title="الريال السعودي">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/0d/Flag_of_Saudi_Arabia.svg"
+             class="w-7 h-7 rounded-full" alt="علم السعودية" loading="lazy" decoding="async" width="28" height="28">
+    </button>
+
+    <button class="currency-btn bg-white hover:bg-yellow-100 p-1.5 rounded-full shadow transition-all duration-200 border border-gray-200 hover:scale-105"
+            data-symbol="د.أ" data-rate="0.1885" data-country="JO" title="الدينار الأردني">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c0/Flag_of_Jordan.svg"
+             class="w-7 h-7 rounded-full" alt="علم الأردن" loading="lazy" decoding="async" width="28" height="28">
+    </button>
+
+    <button class="currency-btn bg-white hover:bg-yellow-100 p-1.5 rounded-full shadow transition-all duration-200 border border-gray-200 hover:scale-105"
+            data-symbol="$" data-rate="0.2564102564" data-country="US" title="الدولار الأمريكي">
+        <img src="https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg"
+             class="w-7 h-7 rounded-full" alt="علم أمريكا" loading="lazy" decoding="async" width="28" height="28">
+    </button>
+<!-- الريال العماني -->
+<button class="currency-btn bg-white hover:bg-yellow-100 p-1.5 rounded-full shadow transition-all duration-200 border border-gray-200 hover:scale-105"
+        data-symbol="ر.ع" data-rate="0.1" data-country="OM" title="الريال العماني">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg"
+         class="w-7 h-7 rounded-full" alt="علم عُمان" loading="lazy" decoding="async" width="28" height="28">
+</button>
+    <!-- الجنيه المصري -->
+    <button class="currency-btn bg-white hover:bg-yellow-100 p-1.5 rounded-full shadow transition-all duration-200 border border-gray-200 hover:scale-105"
+            data-symbol="ج.م" data-rate="13.0" data-country="EG" title="الجنيه المصري">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Egypt.svg"
+             class="w-7 h-7 rounded-full" alt="علم مصر" loading="lazy" decoding="async" width="28" height="28">
+    </button>
+</div>
+
+<!-- أقسام سريعة -->
+<div class="px-4 mt-4">
+    <div class="grid grid-cols-2 gap-3 sm:gap-4">
+
+        <!-- شحن جواهر -->
+        <a href="{{ route('website.diamonds.charge') }}"
+           class="group relative overflow-hidden rounded-2xl border border-yellow-200 bg-gradient-to-l from-yellow-50 to-white shadow-sm transition hover:shadow-md active:scale-[0.99]">
+            <div class="p-3 sm:p-4">
+                <div class="flex items-center justify-center">
+                    {{-- غيّر الصورة كما تريد --}}
+                    <img src="{{ asset('public/uploads/oki/old.png') }}"
+                         alt="شحن جواهر"
+                         class="w-full h-28 sm:h-32 object-cover rounded-xl"
+                         loading="lazy" decoding="async">
+                </div>
+
+                <div class="mt-2 text-center">
+                    <span class="inline-block text-xs text-gray-500">القسم</span>
+                    <h3 class="font-extrabold text-sm sm:text-base text-gray-900 mt-0.5">شحن جواهر</h3>
+                </div>
+
+                <p class="text-[11px] sm:text-sm text-gray-600 mt-2 text-center leading-relaxed">
+                    ادخل للشحن واختر الباقة المناسبة
+                </p>
+
+                <div class="mt-3 flex justify-center">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-yellow-400/15 px-3 py-1 text-xs font-bold text-yellow-700">
+                        <i class="bi bi-gem"></i>
+                        دخول القسم
+                    </span>
+                </div>
+            </div>
+        </a>
+
+        <!-- أكواد جواهر -->
+        <a href="{{ route('website.diamonds.codes') }}"
+           class="group relative overflow-hidden rounded-2xl border border-blue-200 bg-gradient-to-l from-blue-50 to-white shadow-sm transition hover:shadow-md active:scale-[0.99]">
+            <div class="p-3 sm:p-4">
+                <div class="flex items-center justify-center">
+                    {{-- غيّر الصورة كما تريد --}}
+                    <img src="{{ asset('public/uploads/oki/old.png') }}"
+                         alt="أكواد جواهر"
+                         class="w-full h-28 sm:h-32 object-cover rounded-xl"
+                         loading="lazy" decoding="async">
+                </div>
+
+                <div class="mt-2 text-center">
+                    <span class="inline-block text-xs text-gray-500">القسم</span>
+                    <h3 class="font-extrabold text-sm sm:text-base text-gray-900 mt-0.5">أكواد ملابس</h3>
+                </div>
+
+                <p class="text-[11px] sm:text-sm text-gray-600 mt-2 text-center leading-relaxed">
+                    ادخل لشراء/استخدام أكواد الجواهر
+                </p>
+
+                <div class="mt-3 flex justify-center">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-700">
+                        <i class="bi bi-upc-scan"></i>
+                        دخول القسم
+                    </span>
+                </div>
+            </div>
+        </a>
+
+    </div>
+</div>
 
 
-    <!-- rts grocery feature area start -->
-    @foreach($sections as $index => $section)
-        @if($section->design_type == 'layout1')
-            @include('website.sections.layouts._layout_1', ['section' => $section, 'index' => $index])
-        @elseif($section->design_type == 'layout2')
-            @include('website.sections.layouts._layout_2', ['section' => $section, 'index' => $index])
-        @elseif($section->design_type == 'layout3')
-            @include('website.sections.layouts._layout_3', ['section' => $section, 'index' => $index])
-        @elseif($section->design_type == 'layout4')
-            @include('website.sections.layouts._layout_4', ['section' => $section, 'index' => $index])
-        @endif
-    @endforeach
-    <!-- rts grocery feature area end -->
+
+<!-- الأقسام والمنتجات -->
+@foreach($sections as $section)
+    <div class="px-4 py-6">
+        <h2 class="text-center font-bold text-xl mb-4">{{ $section->name }}</h2>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            @foreach($section->products as $product)
+                @php
+                    $imageUrl = $product->getMediaUrl('product', $product, null, 'media', 'product');
+                    $productImage = $imageUrl ?: $fallbackImage;
+                    $isSold = $product->featured === 1;
+                    $discountPercent = null;
+
+                    if (!empty($product->price_before_discount) && $product->price_before_discount > 0) {
+                        $discountPercent = round((($product->price_before_discount - $product->price) / $product->price_before_discount) * 100);
+                    }
+                @endphp
+
+                <div class="relative bg-white p-3 rounded-lg shadow text-center overflow-hidden flex flex-col h-full">
+                    @if($isSold)
+                        <div class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow">
+                            مباع
+                        </div>
+                    @endif
+
+                    @if(!$isSold && !empty($discountPercent) && $discountPercent > 0)
+                        <div class="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded shadow">
+                            خصم {{ $discountPercent }}%
+                        </div>
+                    @endif
+
+                    <img src="{{ $productImage }}"
+                         class="product-img mx-auto rounded-md object-cover w-full h-auto"
+                         alt="{{ $product->name ?? 'Product' }}"
+                         width="600" height="300"
+                         loading="lazy"
+                         decoding="async">
+
+                    <h3 class="font-bold mt-2">{{ $product->name }}</h3>
+
+                    <p class="text-gray-500 text-sm">
+                        {{ $product->short_description ?? 'لا يوجد وصف لهذا المنتج' }}
+                    </p>
+
+                    @if(!empty($product->price_before_discount))
+                        <p class="font-semibold mt-1 product-price text-red-600"
+                           data-base-price="{{ $product->price }}"
+                           data-base-old="{{ $product->price_before_discount }}">
+                            <span class="current-price">ر.س {{ $product->price }}</span>
+                            <span class="old-price text-gray-500 text-sm line-through">
+                                {{ $product->price_before_discount }}
+                            </span>
+                        </p>
+                    @else
+                        <p class="font-semibold mt-1 product-price" data-base-price="{{ $product->price }}">
+                            <span class="current-price">ر.س {{ $product->price }}</span>
+                        </p>
+                    @endif
+
+                    @if($isSold)
+                        <button class="mt-auto w-full bg-gray-400 text-white py-1 rounded text-sm cursor-not-allowed">
+                            مباع
+                        </button>
+                    @else
+                        <a href="{{ route('website.product.show', $product->id) }}"
+                           class="mt-auto block w-full bg-black text-white py-1 rounded text-sm text-center hover:bg-gray-800 transition">
+                            عرض تفاصيل
+                        </a>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endforeach
+
+<!-- حسابات متجر الممالك -->
+<div class="px-4 py-6">
+    <h2 class="text-center font-bold text-xl mb-4 border-b border-gray-300 pb-2 text-yellow-500">
+        حسابات متجر الممالك
+    </h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        @foreach($products as $product)
+            @php
+                $imageUrl = $product->getMediaUrl('product', $product, null, 'media', 'product');
+                $productImage = $imageUrl ?: $fallbackImage;
+                $isSold = $product->featured === 1;
+                $discountPercent = null;
+
+                if (!empty($product->price_before_discount) && $product->price_before_discount > 0) {
+                    $discountPercent = round((($product->price_before_discount - $product->price) / $product->price_before_discount) * 100);
+                }
+            @endphp
+
+            <div class="relative bg-white p-3 rounded-lg shadow text-center product flex flex-col h-full"
+                 data-status="{{ $isSold ? 'مباع' : '' }}">
+
+                @if($isSold)
+                    <div class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow">
+                        مباع
+                    </div>
+                @endif
+
+                @if(!$isSold && !empty($discountPercent) && $discountPercent > 0)
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded shadow">
+                        خصم {{ $discountPercent }}%
+                    </div>
+                @endif
+
+                <img src="{{ $productImage }}"
+                     class="product-img mx-auto rounded-md object-cover"
+                     alt="{{ $product->name }}"
+                     width="600" height="300"
+                     loading="lazy"
+                     decoding="async">
+
+                <h2 class="font-bold mt-2">{{ $product->name }}</h2>
+
+                <p class="text-gray-500 text-sm">
+                    {{ $product->short_description ?? 'لا يوجد وصف متاح' }}
+                </p>
+
+                @if(!empty($product->price_before_discount))
+                    <p class="font-semibold mt-1 product-price text-red-600"
+                       data-base-price="{{ $product->price }}"
+                       data-base-old="{{ $product->price_before_discount }}">
+                        <span class="current-price">ر.س {{ $product->price }}</span>
+                        <span class="old-price text-gray-500 text-sm line-through">
+                            {{ $product->price_before_discount }}
+                        </span>
+                    </p>
+                @else
+                    <p class="font-semibold mt-1 product-price" data-base-price="{{ $product->price }}">
+                        <span class="current-price">ر.س {{ $product->price }}</span>
+                    </p>
+                @endif
+
+                @if($isSold)
+                    <button class="mt-auto w-full bg-gray-400 text-white py-1 rounded text-sm cursor-not-allowed">
+                        مباع
+                    </button>
+                @else
+                    <a href="{{ route('website.product.show', $product->id) }}"
+                       class="mt-auto block w-full bg-black text-white py-1 rounded text-sm text-center">
+                        عرض تفاصيل
+                    </a>
+                @endif
+            </div>
+        @endforeach
+    </div>
+</div>
+
+<!-- آراء العملاء -->
+<div class="px-4 py-10 bg-gradient-to-l from-yellow-50 to-white border-t border-gray-200">
+    <h2 class="text-center font-bold text-xl mb-6 text-gray-800">
+        آراء <span class="text-yellow-500">عملائنا</span>
+    </h2>
+
+    <div class="swiper reviewsSwiper max-w-6xl mx-auto">
+        <div class="swiper-wrapper">
+            @php
+                $reviews = [
+                    ['name' => 'تركي القحطاني 🇸🇦', 'text' => 'متجر الممالك ثقة 🔥 جربته أكثر من مرة وما خيب ظني أبد 💪'],
+                    ['name' => 'سارة المطيري 🇸🇦', 'text' => 'تنفيذ سريع جدًا وخدمة محترمة 🖤 أفضل متجر فري فاير بلا منازع!'],
+                    ['name' => 'عبدالله الشهري 🇸🇦', 'text' => 'يا عيال المتجر ذا فخم 🔥 سرعة بالتنفيذ وثقة ما بعدها ثقة 💚'],
+                    ['name' => 'ريم العتيبي 🇸🇦', 'text' => 'الممالك فخم فخم فخم 👑 كل طلب يوصلني بثواني حرفيًا!'],
+                    ['name' => 'فهد الحربي 🇸🇦', 'text' => 'اطلق ممالك فالعالم 💚 ما في تأخير ولا مشاكل، متجر محترم جدًا.'],
+                    ['name' => 'نواف الدوسري 🇸🇦', 'text' => 'تجربة خرافية 😍 أسعار ممتازة وتنفيذ لحظي، شكراً لكم!'],
+                    ['name' => 'منيرة القحطاني 🇸🇦', 'text' => 'المتجر الوحيد اللي أتعامل معه 💛 تعامل راقي وسرعة تنفيذ 🔥'],
+                    ['name' => 'عبدالرحمن الزهراني 🇸🇦', 'text' => 'متجر الممالك يستحق خمس نجوم ⭐⭐⭐⭐⭐ ثقة وأمان وسرعة.'],
+                    ['name' => 'مشعل العنزي 🇸🇦', 'text' => 'جربت أكثر من مرة وكل مرة نفس الجودة 💚 المتجر الأفضل بلا منازع.'],
+                    ['name' => 'لطيفة الشمري 🇸🇦', 'text' => 'والله ما أتوقع فيه متجر ينافسهم 🔥 سرعة ودقة بالتعامل.'],
+                ];
+            @endphp
+
+            @foreach($reviews as $review)
+                <div class="swiper-slide bg-white rounded-2xl shadow-sm p-4 border border-gray-100 transition transform hover:scale-[1.02]">
+                    <h3 class="font-semibold text-gray-800 mb-1 text-sm sm:text-base">{{ $review['name'] }}</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm leading-relaxed">{{ $review['text'] }}</p>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="swiper-pagination mt-4"></div>
+    </div>
+</div>
+
+<!-- المزايا -->
+<div class="px-4 py-8 text-center bg-white border-t border-gray-100">
+    <div class="flex flex-wrap justify-center gap-8">
+        <div class="flex items-center gap-2">
+            <i class="bi bi-shield-check text-green-500 text-xl"></i>
+            <span class="text-gray-700 font-semibold text-sm">ضمان استرجاع الأموال</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <i class="bi bi-truck text-blue-500 text-xl"></i>
+            <span class="text-gray-700 font-semibold text-sm">تنفيذ فوري وآمن</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <i class="bi bi-lock text-yellow-500 text-xl"></i>
+            <span class="text-gray-700 font-semibold text-sm">دفع مشفر وآمن</span>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('js')
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const currencyButtons = document.querySelectorAll(".currency-btn");
+    const DEFAULT_COUNTRY = "SA";
+    const CACHE_KEY = "user_country_code";
+    const CACHE_TTL = 6 * 60 * 60 * 1000;
 
+    const applyCurrency = (countryCode) => {
+        const btn = document.querySelector(`.currency-btn[data-country="${countryCode}"]`)
+            || document.querySelector(`.currency-btn[data-country="${DEFAULT_COUNTRY}"]`)
+            || currencyButtons[0];
+
+        if (btn) {
+            btn.click();
+        }
+    };
+
+    const detectCountry = async () => {
+        try {
+            const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+            if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
+                applyCurrency(cached.code);
+                return;
+            }
+
+            const res = await fetch("https://ipwho.is/?fields=country_code");
+            const data = await res.json();
+            const code = data?.country_code;
+
+            if (code) {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ code, ts: Date.now() }));
+                applyCurrency(code);
+                return;
+            }
+        } catch (e) {
+            // ignore
+        }
+
+        applyCurrency(DEFAULT_COUNTRY);
+    };
+
+    currencyButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const symbol = btn.dataset.symbol;
+            const rate = parseFloat(btn.dataset.rate);
+
+            document.querySelectorAll(".product-price").forEach(p => {
+                const base = parseFloat(p.dataset.basePrice);
+                const baseOld = parseFloat(p.dataset.baseOld);
+                const current = p.querySelector(".current-price");
+                const old = p.querySelector(".old-price");
+
+                if (current && !isNaN(base)) {
+                    const converted = Math.round(base * rate);
+                    current.textContent = `${symbol} ${converted}`;
+                }
+
+                if (old && !isNaN(baseOld)) {
+                    const convertedOld = Math.round(baseOld * rate);
+                    old.textContent = convertedOld;
+                }
+            });
+
+            currencyButtons.forEach(b => b.classList.remove("ring-2", "ring-yellow-500"));
+            btn.classList.add("ring-2", "ring-yellow-500");
+        });
+    });
+
+    applyCurrency(DEFAULT_COUNTRY);
+    detectCountry();
+
+    const stars = document.querySelectorAll(".star");
+    stars.forEach((star, index) => {
+        star.addEventListener("click", () => {
+            stars.forEach((s, i) => {
+                s.classList.toggle("text-yellow-400", i <= index);
+                s.classList.toggle("text-gray-400", i > index);
+                if (s.previousElementSibling) {
+                    s.previousElementSibling.checked = true;
+                }
+            });
+        });
+    });
+
+    if (typeof Swiper !== "undefined") {
+        new Swiper(".reviewsSwiper", {
+            loop: true,
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+            },
+            slidesPerView: 1.2,
+            spaceBetween: 12,
+            centeredSlides: true,
+            speed: 600,
+            effect: "slide",
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            breakpoints: {
+                480: { slidesPerView: 1.4 },
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+            },
+        });
+    }
+
+    if (typeof Swiper !== "undefined" && document.querySelector('.swiper-container')) {
+        new Swiper('.swiper-container', {
+            loop: true,
+            autoplay: {
+                delay: 4000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+        });
+    }
+});
+</script>
 @endpush

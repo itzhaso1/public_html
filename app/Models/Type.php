@@ -11,6 +11,7 @@ class Type extends Model implements TranslatableContract {
     use HasFactory, Translatable;
     protected $table = 'types';
     public $translatedAttributes = ['name'];
+    protected $with = ['translations'];
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_type');

@@ -6,24 +6,34 @@ namespace App\Models\Concerns;
 
 use Illuminate\Http\UploadedFile;
 use Intervention\Image\Facades\Image;
-use Illuminate\Support\Facades\Storage;
 
-trait UploadMedia {
-    public function uploadMedia(UploadedFile $file, string $collection = 'default', string $disk = 'storage', ?int $resizeWidth = null, ?int $resizeHeight = null)
-    {
+trait UploadMedia
+{
+    /**
+     * ✅ رفع ميديا (صور أو ملفات) داخل مجلد public/uploads/<ModelName>/
+     */
+    public function uploadMedia(
+        UploadedFile $file,
+        string $collection = 'default',
+        string $disk = 'public',
+        ?int $resizeWidth = null,
+        ?int $resizeHeight = null
+    ) {
         $modelName = class_basename($this);
-        $folderPath = $disk === 'root'
-            ? base_path("dashboard/uploads/{$modelName}")
-            : "uploads/{$modelName}";
+        $folderPath = public_path("uploads/{$modelName}");
 
-        if ($disk === 'root' && !file_exists($folderPath)) {
+        // إنشاء المجلد إذا لم يكن موجودًا
+        if (!file_exists($folderPath)) {
             mkdir($folderPath, 0777, true);
         }
 
         $fileName = md5(uniqid()) . '.' . $file->getClientOriginalExtension();
-        $filePath = $folderPath . '/' . $fileName;
-        if (in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png', 'webp'])) {
+        $filePath = "{$folderPath}/{$fileName}";
+
+        // ✅ التعامل مع الصور فقط
+        if (in_array(strtolower($file->getClientOriginalExtension()), ['jpg', 'jpeg', 'png', 'webp'])) {
             $image = Image::make($file);
+
             if ($resizeWidth && $resizeHeight) {
                 $image->resize($resizeWidth, $resizeHeight, function ($constraint) {
                     $constraint->aspectRatio();
@@ -31,59 +41,65 @@ trait UploadMedia {
                 });
             }
 
-            if ($disk === 'root') {
-                $image->save($filePath, 80);
-            } else {
-                Storage::disk($disk)->put($filePath, (string) $image->encode());
-            }
+            $image->save($filePath, 85);
         } else {
-            if ($disk === 'root') {
-                $file->move($folderPath, $fileName);
-            } else {
-                $filePath = $file->storeAs($folderPath, $fileName, $disk);
-            }
+            // ملفات غير الصور
+            $file->move($folderPath, $fileName);
         }
+
+        // ✅ إنشاء سجل في قاعدة البيانات (media)
         return $this->media()->create([
             'collection_name' => $collection,
-            'file_name' => $fileName,
-            'disk' => $disk,
+            'file_name'       => $fileName,
+            'disk'            => 'public',
         ]);
     }
 
-    public function deleteMedia(string $collection = 'default') {
+    /**
+     * ✅ حذف آخر ملف من مجموعة ميديا محددة
+     */
+    public function deleteMedia(string $collection = 'default')
+    {
         $media = $this->media()->where('collection_name', $collection)->latest()->first();
 
         if ($media) {
             $modelName = class_basename($this);
-            $filePath = $media->disk === 'root'
-                ? base_path("dashboard/uploads/{$modelName}/{$media->file_name}")
-                : "uploads/{$modelName}/{$media->file_name}";
-            if ($media->disk === 'root') {
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
-            } else {
-                Storage::disk($media->disk)->delete($filePath);
+            $filePath = public_path("uploads/{$modelName}/{$media->file_name}");
+
+            if (file_exists($filePath)) {
+                unlink($filePath);
             }
+
             $media->delete();
         }
     }
 
-    public function updateMedia(UploadedFile $file, string $collection = 'default', string $disk = 'storage', ?int $resizeWidth = null, ?int $resizeHeight = null)
-    {
+    /**
+     * ✅ تحديث صورة (يحذف القديمة ثم يرفع الجديدة)
+     */
+    public function updateMedia(
+        UploadedFile $file,
+        string $collection = 'default',
+        string $disk = 'public',
+        ?int $resizeWidth = null,
+        ?int $resizeHeight = null
+    ) {
         $this->deleteMedia($collection);
         return $this->uploadMedia($file, $collection, $disk, $resizeWidth, $resizeHeight);
     }
 
-    public function getMediaUrl(string $collection = 'default'): ?string {
+    /**
+     * ✅ جلب رابط الصورة
+     */
+    public function getMediaUrl(string $collection = 'default'): ?string
+    {
         $media = $this->media()->where('collection_name', $collection)->latest()->first();
+
         if ($media) {
             $modelName = class_basename($this);
-            $basePath = $media->disk === 'root'
-                ? url("/media/{$modelName}/{$media->file_name}")
-                : Storage::disk($media->disk)->url("uploads/{$modelName}/");
-            return $basePath;
+            return asset("uploads/{$modelName}/{$media->file_name}");
         }
+
         return null;
     }
 }

@@ -195,7 +195,7 @@ trait UploadMedia2 {
     ): ?string {
         if (!$model) return null;
 
-        $base = "uploads/$baseFolder";
+        $base = 'public/' ."uploads/$baseFolder";
         if ($column && in_array($column, $model->getFillable())) {
             $fileName = $model->{$column};
             if ($fileName) {
@@ -220,5 +220,214 @@ trait UploadMedia2 {
             }
         }
         return null;
+    }
+
+    /*public function uploadMultipleMedia(
+        string $baseFolder,
+        array $files,
+        $model,
+        ?string $relation = null,
+        bool $useStorage = false,
+        bool $generateThumbnail = false,
+        ?string $collectionName = null,
+        bool $addWatermark = false
+    ): array {
+        $uploadedFiles = [];
+        $disk = $useStorage ? 'local' : 'public';
+        $folderPath = "/uploads/$baseFolder";
+        $fullPath = $useStorage
+            ? public_path($folderPath)
+            : storage_path("app/public/$folderPath");
+        if (!file_exists($fullPath)) {
+            mkdir($fullPath, 0777, true);
+        }
+        foreach ($files as $file) {
+            if (!$file instanceof UploadedFile) {
+                continue;
+            }
+            if (!$this->isValidImage($file)) {
+                continue;
+            }
+            $extension = $file->getClientOriginalExtension();
+            $fileName = uniqid() . '.' . $extension;
+            $filePath = "$folderPath/$fileName";
+            $image = Image::make($file->getPathname());
+
+            if ($addWatermark) {
+                $watermark = Image::make(storage_path('app/public/watermark.png'));
+                $image->insert($watermark, 'bottom-right', 10, 10);
+            }
+
+            if ($useStorage) {
+                //$image->save(storage_path("app/public/$filePath"));
+                $image->save(public_path($filePath));
+            } else {
+                //$image->save(public_path($filePath));
+                $image->save(storage_path("app/public/$filePath"));
+
+            }
+
+            if ($generateThumbnail) {
+                $this->generateThumbnail($image, $folderPath, $fileName, $useStorage);
+            }
+
+            if ($relation && method_exists($model, $relation)) {
+                $model->$relation()->create([
+                    'file_name' => $fileName,
+                    'disk' => $useStorage ? 'direct_public' : 'storage_public',
+                    'mediable_id' => $model->id,
+                    'mediable_type' => get_class($model),
+                    'collection_name' => $collectionName ?? 'gallery',
+                ]);
+            }
+            $uploadedFiles[] = $fileName;
+        }
+        return $uploadedFiles;
+    }*/
+    public function uploadMultipleMedia(
+        string $baseFolder,
+        array $files,
+        $model,
+        ?string $relation = null,
+        bool $useStorage = false,
+        bool $generateThumbnail = false,
+        ?string $collectionName = null,
+        bool $addWatermark = false
+    ): array {
+        $uploadedFiles = [];
+
+        // المسار داخل public مباشرة
+        $folderPath = "uploads/$baseFolder";
+        $fullPath = public_path($folderPath);
+
+        // إنشاء المجلد إذا مش موجود
+        if (!file_exists($fullPath)) {
+            mkdir($fullPath, 0777, true);
+        }
+
+        foreach ($files as $file) {
+            if (!$file instanceof UploadedFile || !$this->isValidImage($file)) {
+                continue;
+            }
+
+            $extension = $file->getClientOriginalExtension();
+            $fileName = uniqid() . '.' . $extension;
+            $filePath = $fullPath . '/' . $fileName;
+
+            $image = Image::make($file->getPathname());
+
+            // إضافة العلامة المائية لو مطلوبة
+            if ($addWatermark && file_exists(storage_path('app/public/watermark.png'))) {
+                $watermark = Image::make(storage_path('app/public/watermark.png'));
+                $image->insert($watermark, 'bottom-right', 10, 10);
+            }
+
+            // حفظ الصورة في public/uploads/...
+            $image->save($filePath);
+
+            // إنشاء الصورة المصغرة
+            if ($generateThumbnail) {
+                $this->generateThumbnail($image, $folderPath, $fileName, false);
+            }
+
+            // حفظ في قاعدة البيانات
+            if ($relation && method_exists($model, $relation)) {
+                $model->$relation()->create([
+                    'file_name' => $fileName,
+                    'disk' => 'direct_public',
+                    'mediable_id' => $model->id,
+                    'mediable_type' => get_class($model),
+                    'collection_name' => $collectionName ?? 'gallery',
+                ]);
+            }
+
+            $uploadedFiles[] = $fileName;
+        }
+
+        return $uploadedFiles;
+    }
+
+    /*public function getMultipleMediaUrls(
+        string $baseFolder,
+        $model,
+        ?string $relation = null,
+        ?string $collectionName = null,
+        bool $useStorage = false
+    ): array {
+        $images = [];
+
+        // لو مفيش موديل نخرج
+        if (!$model) {
+            return [];
+        }
+
+        $base = "uploads/$baseFolder";
+
+        // لو فيه relation
+        if ($relation && method_exists($model, $relation)) {
+            $query = $model->$relation();
+
+            if ($collectionName) {
+                $query->where('collection_name', $collectionName);
+            }
+
+            $mediaItems = $query->get();
+
+            foreach ($mediaItems as $media) {
+                $fileName = $media->file_name;
+                $disk = $media->disk;
+
+                if ($disk === 'direct_public') {
+                    $images[] = [
+                        'original' => asset("{$base}/{$fileName}"),
+                        'thumbnail' => asset("{$base}/thumbnails/{$fileName}"),
+                    ];
+                } elseif ($disk === 'storage_public') {
+                    $images[] = [
+                        'original' => asset("storage/{$base}/{$fileName}"),
+                        'thumbnail' => asset("storage/{$base}/thumbnails/{$fileName}"),
+                    ];
+                }
+            }
+        }
+
+        return $images;
+    }*/
+    public function getMultipleMediaUrls(
+        string $baseFolder,
+        $model,
+        ?string $relation = null,
+        ?string $collectionName = null
+    ): array {
+        $images = [];
+
+        // لو مفيش موديل نخرج
+        if (!$model) {
+            return [];
+        }
+
+        $base = 'public/' ."uploads/$baseFolder";
+
+        // لو فيه relation
+        if ($relation && method_exists($model, $relation)) {
+            $query = $model->$relation();
+
+            if ($collectionName) {
+                $query->where('collection_name', $collectionName);
+            }
+
+            $mediaItems = $query->get();
+
+            foreach ($mediaItems as $media) {
+                $fileName = $media->file_name;
+
+                $images[] = [
+                    'original'   => asset("{$base}/{$fileName}"),
+                    'thumbnail'  => asset("{$base}/thumbnails/{$fileName}"),
+                ];
+            }
+        }
+
+        return $images;
     }
 }

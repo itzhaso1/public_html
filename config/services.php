@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'erp' => [
+        'url' => env('ERP_API_URL', 'http://207.180.213.98:80/api/RunSql'),
+        'connection_string' => env('ERP_CONNECTION_STRING', 'user id=sa;pwd=Ts@2008@;Data Source=5.189.161.154;database=demo_website;'),
+    ],
+
+
 ];

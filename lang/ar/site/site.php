@@ -80,10 +80,18 @@ return [
     'orders_list' => 'قائمه طلبات',
     'processes' => 'العمليات',
     'dashboard' => 'الاحصائيات',
+    'checkout_successfully' => 'تم إتمام الطلب بنجاح',
     'order_tracking' => 'تتبع الطلبات',
     'products_count' => 'عدد المنتاجات',
     'payment_methods' => [
         'cash_on_delivery' => 'الدفع عند الاستلام',
         'payment_method' => 'بطاقة إلكترونية', 
     ],
+    'login_to_your_account' => 'تسجيل الدخول لحسابك',
+    'name' => 'الاسم',
+    'email' => 'البريد الالكترونى',
+    'password' => 'كلمه المرور',
+    'login_account' => 'تسجيل الدخول',
+    'register_new_account' => 'تسجيل حساب جديد',
+    
 ];

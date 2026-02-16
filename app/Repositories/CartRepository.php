@@ -14,6 +14,12 @@ class CartRepository implements CartInterface {
 
     public function __construct() {
         $this->items = collect([]);
+        if (session()->has('applied_coupon')) {
+            $coupon = Coupon::find(session('applied_coupon'));
+            if ($coupon) {
+                $this->coupon = $coupon;
+            }
+        }
     }
     public function get() : Collection {
         if(!$this->items->count())

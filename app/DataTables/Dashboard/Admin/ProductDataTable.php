@@ -1,20 +1,20 @@
 <?php
-
+ 
 namespace App\DataTables\Dashboard\Admin;
-
+ 
 use App\DataTables\Base\BaseDataTable;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Utilities\Request as DataTableRequest;
-
+ 
 class ProductDataTable extends BaseDataTable {
     public function __construct(DataTableRequest $request)
     {
         parent::__construct(new Product);
         $this->request = $request;
     }
-
+ 
     public function dataTable($query): EloquentDataTable {
         return (new EloquentDataTable($query))
             ->addColumn('action', function (Product $product) {
@@ -29,15 +29,6 @@ class ProductDataTable extends BaseDataTable {
             ->addColumn('brand', function (Product $product) {
                 return $product?->brand?->name;
             })
-            /*->addColumn('type', function (Product $product) {
-            if ($product->types->isEmpty()) return '<span class="text-muted">لا يوجد</span>';
-                $list = '<ul class="list-unstyled mb-0">';
-                foreach ($product->types as $type) {
-                    $list .= '<li>* ' . $type->name . '</li>';
-                }
-                $list .= '</ul>';
-                return $list;
-            })*/
             ->addColumn('tags', function (Product $product) {
                 if ($product->tags->isEmpty()) return '<span class="text-muted">لا يوجد</span>';
                 $badges = '';
@@ -54,12 +45,16 @@ class ProductDataTable extends BaseDataTable {
             })
             ->rawColumns(['category','tags','types','action', 'created_at', 'updated_at', 'product']);
     }
-
+ 
     public function query(): QueryBuilder
     {
-        return Product::with(['media','category', 'brand', 'tags'])->latest();
+        // ✅ التعديل هنا:
+        // إضافة شرط whereNull('service_type') لاستبعاد منتجات الشحن من القائمة
+        return Product::with(['media','category', 'brand', 'tags'])
+            ->whereNull('service_type') 
+            ->latest();
     }
-
+ 
     public function getColumns(): array
     {
         return [
