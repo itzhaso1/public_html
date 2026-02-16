@@ -19,7 +19,7 @@ class DiamondCodeController extends Controller
             ->paginate(50);
 
         return view('dashboard.admin.diamond_codes.index', [
-            'pageTitle' => 'أكواد الجواهر',
+            'pageTitle' => 'أكواد ملابس',
             'codes' => $codes,
         ]);
     }
@@ -33,7 +33,7 @@ class DiamondCodeController extends Controller
             ->get();
 
         return view('dashboard.admin.diamond_codes.create', [
-            'pageTitle' => 'إضافة كود جواهر',
+            'pageTitle' => 'إضافة كود',
             'products' => $products,
         ]);
     }

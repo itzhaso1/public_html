@@ -37,7 +37,7 @@
                         <a href="{{ route('website.diamonds.codes') }}"
                            class="flex-1 lg:flex-none text-center rounded-xl px-4 py-2 text-sm font-extrabold transition
                                   {{ $active === 'codes' ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/15' }}">
-                            🎟️ أكواد الجواهر
+                            🎟️ أكواد ملابس
                         </a>
                     </div>
 

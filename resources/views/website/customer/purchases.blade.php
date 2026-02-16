@@ -59,7 +59,7 @@
 
                 @if($isCodes)
                     <div class="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                        <div class="text-sm font-extrabold text-gray-900">كود الجواهر</div>
+                        <div class="text-sm font-extrabold text-gray-900">الكود</div>
 
                         @if($mpr->status === 'approved' && $mpr->diamondCode)
                             <div class="mt-2 text-sm text-gray-700">
@@ -99,7 +99,7 @@
                     </a>
                     <a href="{{ route('website.diamonds.codes') }}"
                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold hover:bg-gray-50 transition">
-                        أكواد الجواهر
+                        أكواد ملابس
                     </a>
                 </div>
             </div>

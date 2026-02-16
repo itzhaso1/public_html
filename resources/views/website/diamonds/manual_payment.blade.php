@@ -10,7 +10,7 @@
 @endphp
 
 @include('website.diamonds.partials.header', [
-    'title' => $isCodes ? 'أكواد الجواهر' : 'شحن الجواهر',
+    'title' => $isCodes ? 'أكواد ملابس' : 'شحن الجواهر',
     'subtitle' => 'اخترت الدفع اليدوي: حوّل المبلغ ثم ارفع إيصال التحويل.',
     'active' => $isCodes ? 'codes' : 'charge',
 ])

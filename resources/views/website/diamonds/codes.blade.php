@@ -1,7 +1,7 @@
 @extends('website.layouts.common.website')
 
 @section('pageTitle')
-أكواد الجواهر
+أكواد ملابس
 @endsection
 
 @section('content')
@@ -11,8 +11,8 @@
 @endphp
 
 @include('website.diamonds.partials.header', [
-    'title' => 'أكواد الجواهر',
-    'subtitle' => 'أكواد جاهزة وتسليم سريع—اختر الكود المناسب.',
+    'title' => 'أكواد ملابس',
+    'subtitle' => 'مخزون أكواد جاهز—ادفع ثم استلم الكود بعد الموافقة.',
     'active' => 'codes',
 ])
 
@@ -25,7 +25,7 @@
                 </div>
                 <div>
                     <div class="text-sm text-gray-500">قسم الأكواد</div>
-                    <h2 class="text-lg sm:text-xl font-extrabold text-gray-900">أكواد الجواهر</h2>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-gray-900">أكواد ملابس</h2>
                 </div>
             </div>
 
