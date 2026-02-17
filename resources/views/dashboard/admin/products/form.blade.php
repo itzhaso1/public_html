@@ -6,7 +6,7 @@
 @section('css')
 @endsection
 @section('content')
-    <div id="kt_content_container" class="container-xxl">
+    <div class="w-100">
         <div class="mb-5 card card-xxl-stretch mb-xl-8">
             <!--begin::Header-->
             <div class="pt-5 border-0 card-header">
@@ -20,6 +20,8 @@
             <div class="py-3 card-body">
                 @php
                 $isEdit = isset($product);
+                $defaultCategoryId = $defaultCategoryId ?? null;
+                $defaultTypeId = $defaultTypeId ?? null;
                 @endphp
 
                <form id="productForm"
@@ -91,42 +93,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 
-                    {{-- إخفاء حقل التصنيف --}}
-<div class="form-group mb-3" style="display: none;">
-    <label>التصنيف</label>
-    <select name="category_id" class="form-control">
-        @foreach($data['categories'] as $category)
-        <option value="{{ $category->id }}" @selected(old('category_id', $product?->category_id ?? '') == $category->id)>
-            {{ $category->name }}
-        </option>
-        @endforeach
-    </select>
-</div>
-
-
-                    <div class="form-group mb-3">
-                        <label>النوع</label>
-                        <select name="type_id" class="form-control">
-                            <option value="">اختر النوع</option>
-                            @foreach($data['types'] as $type)
-                            <option value="{{ $type->id }}" @selected(old('type_id', $product?->type_id ?? '') == $type->id)>
-                                {{ $type->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                  {{-- إخفاء حقل الوسوم من واجهة المستخدم --}}
-<div class="form-group mb-3" style="display: none;">
-    <label>الوسوم (Tags)</label>
-    <select name="tags[]" class="form-control">
-        @foreach($data['tags'] as $tag)
-        <option value="{{ $tag->id }}" @if(isset($product) && $product?->tags->pluck('id')->contains($tag->id)) selected @endif>
-            {{ $tag->name }}
-        </option>
-        @endforeach
-    </select>
-</div>
+                    {{-- قيم تلقائية بدل الأقسام/الوحدات/الوسوم (لتبسيط الداشبورد) --}}
+                    <input type="hidden" name="category_id"
+                           value="{{ old('category_id', $product?->category_id ?? $defaultCategoryId) }}">
+                    <input type="hidden" name="type_id"
+                           value="{{ old('type_id', $product?->type_id ?? $defaultTypeId) }}">
+                    {{-- tags[] تم إزالتها من الواجهة --}}
 
 
                     <div class="form-group mb-3">
@@ -662,5 +634,9 @@ function removeGalleryImage(index) {
 }
 </script>
             
+                </form>
+            </div>
+        </div>
+    </div>
 
 @endsection
