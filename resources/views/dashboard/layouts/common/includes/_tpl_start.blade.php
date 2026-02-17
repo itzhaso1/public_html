@@ -65,6 +65,7 @@
             font-family: 'Cairo', sans-serif;
         }
     </style>
+    @yield('css')
     @stack('css')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>

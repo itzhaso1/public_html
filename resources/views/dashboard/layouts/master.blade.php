@@ -17,7 +17,7 @@
                 <!--begin::Post-->
                 <div class="post d-flex flex-column-fluid" id="kt_post">
                     <!--begin::Container-->
-                    <div id="kt_content_container" class="container-xxl" style="width: 1500px">
+                    <div id="kt_content_container" class="container-xxl px-3 px-lg-8">
                         @include('dashboard.layouts.common._partial.messages')
                         @yield('content')
                     </div>

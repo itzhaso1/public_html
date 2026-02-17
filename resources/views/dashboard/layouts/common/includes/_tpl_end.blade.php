@@ -50,6 +50,7 @@
 </script>
 <!-- End DataTables -->
 <!--end::Javascript-->
+@yield('js')
 @stack('js')
 </body>
 <!--end::Body-->
