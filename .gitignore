@@ -4,7 +4,6 @@
 /public/hot
 /public/storage
 /public/index.php
-/resources/views/dashboard/layouts
 /storage/*.key
 /vendor
 .env
