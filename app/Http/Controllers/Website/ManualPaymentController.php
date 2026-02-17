@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
+use App\Models\DiamondCode;
 use App\Models\ManualPaymentRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -16,6 +17,20 @@ class ManualPaymentController extends Controller
     {
         abort_unless(config('bank.enabled'), 404);
 
+        $isCodes = ($product->service_type ?? null) === 'codes';
+        if ($isCodes) {
+            $hasStock = DiamondCode::query()
+                ->where('product_id', $product->id)
+                ->where('status', 'available')
+                ->exists();
+
+            if (! $hasStock) {
+                return redirect()
+                    ->route('website.diamonds.codes')
+                    ->withErrors(['error' => 'نفذت الكمية لهذا المنتج حالياً.']);
+            }
+        }
+
         return view('website.diamonds.manual_payment', [
             'product' => $product,
             'pageTitle' => 'الدفع اليدوي',
@@ -27,6 +42,18 @@ class ManualPaymentController extends Controller
         abort_unless(config('bank.enabled'), 404);
 
         $isCodes = ($product->service_type ?? null) === 'codes';
+        if ($isCodes) {
+            $hasStock = DiamondCode::query()
+                ->where('product_id', $product->id)
+                ->where('status', 'available')
+                ->exists();
+
+            if (! $hasStock) {
+                return redirect()
+                    ->route('website.diamonds.codes')
+                    ->withErrors(['error' => 'نفذت الكمية لهذا المنتج حالياً.']);
+            }
+        }
 
         $rules = [
             'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],

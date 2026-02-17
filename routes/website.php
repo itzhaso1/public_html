@@ -59,6 +59,14 @@ Route::group(
             $products = Cache::remember("diamonds.codes.$locale", 60 * 5, function () {
                 return Product::query()
                     ->where('service_type', 'codes')
+                    ->whereHas('diamondCodes', function ($q) {
+                        $q->where('status', 'available');
+                    })
+                    ->withCount([
+                        'diamondCodes as available_codes_count' => function ($q) {
+                            $q->where('status', 'available');
+                        },
+                    ])
                     ->with(['media', 'translations'])
                     ->get();
             });

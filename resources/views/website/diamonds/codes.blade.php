@@ -103,8 +103,8 @@
     @else
         <div class="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
             <div class="text-3xl mb-2">🎟️</div>
-            <h3 class="font-extrabold text-gray-900">لا توجد أكواد متاحة حالياً</h3>
-            <p class="text-sm text-gray-600 mt-1">جرّب لاحقاً أو تواصل معنا وسنساعدك.</p>
+            <h3 class="font-extrabold text-gray-900">نفذت الكمية حالياً</h3>
+            <p class="text-sm text-gray-600 mt-1">لا يوجد مخزون أكواد متاح الآن. جرّب لاحقاً أو تواصل معنا.</p>
             <a href="{{ route('home') }}"
                class="mt-4 inline-flex items-center justify-center rounded-xl bg-black px-5 py-2.5 text-sm font-bold text-white hover:bg-gray-800 transition">
                 الرجوع للرئيسية

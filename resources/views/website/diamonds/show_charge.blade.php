@@ -10,11 +10,18 @@
     $imageUrl = $product?->getMediaUrl('product', $product, null, 'media', 'product');
     $productImage = $imageUrl ?: $fallbackImage;
     $isCodes = ($product?->service_type ?? null) === 'codes';
-    $title = $product?->name ?? ($isCodes ? 'كود جواهر' : 'شحن جواهر');
+    $title = $product?->name ?? ($isCodes ? 'كود' : 'شحن جواهر');
+    $availableCodesCount = $isCodes
+        ? \App\Models\DiamondCode::query()
+            ->where('product_id', $product->id)
+            ->where('status', 'available')
+            ->count()
+        : null;
+    $isOutOfStock = $isCodes && ((int) $availableCodesCount) === 0;
 @endphp
 
 @include('website.diamonds.partials.header', [
-    'title' => $isCodes ? 'أكواد الجواهر' : 'شحن الجواهر',
+    'title' => $isCodes ? 'أكواد ملابس' : 'شحن الجواهر',
     'subtitle' => 'تفاصيل الباقة قبل الشراء.',
     'active' => $isCodes ? 'codes' : 'charge',
 ])
@@ -35,6 +42,12 @@
             <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 leading-snug">
                 {{ $title }}
             </h2>
+
+            @if($isOutOfStock)
+                <div class="mt-3 inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+                    نفذت الكمية
+                </div>
+            @endif
 
             @if(!empty($product?->short_description))
                 <p class="mt-2 text-sm text-gray-600 leading-relaxed">
@@ -76,10 +89,17 @@
                    class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 transition">
                     العودة للمتجر
                 </a>
-                <a href="{{ route('website.diamonds.manual_payment.create', $product) }}"
-                   class="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition">
-                    الدفع اليدوي (تحويل بنكي)
-                </a>
+                @if(! $isOutOfStock)
+                    <a href="{{ route('website.diamonds.manual_payment.create', $product) }}"
+                       class="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition">
+                        الدفع اليدوي (تحويل بنكي)
+                    </a>
+                @else
+                    <a href="{{ route('website.diamonds.codes') }}"
+                       class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-gray-100 px-5 py-3 text-sm font-extrabold text-gray-700 cursor-not-allowed">
+                        نفذت الكمية
+                    </a>
+                @endif
                 <a href="https://chat.whatsapp.com/LiEKm0hQPlB9yeToyetcbh"
                    target="_blank"
                    class="inline-flex items-center justify-center rounded-xl bg-[#25D366] px-5 py-3 text-sm font-extrabold text-white hover:brightness-95 transition">

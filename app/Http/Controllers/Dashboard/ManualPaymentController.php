@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DiamondCode;
 use App\Models\ManualPaymentRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ManualPaymentController extends Controller
@@ -77,6 +78,11 @@ class ManualPaymentController extends Controller
                 'manual_payment_request_id' => $manualPaymentRequest->id,
                 'delivered_at' => now(),
             ]);
+
+            // Codes page is cached; clear it so out-of-stock products disappear immediately.
+            foreach (['ar', 'en'] as $locale) {
+                Cache::forget("diamonds.codes.$locale");
+            }
         }
 
         $manualPaymentRequest->update([
