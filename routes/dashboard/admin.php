@@ -79,6 +79,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::post('/', [Dashboard\DiamondCodeController::class, 'store'])->name('store');
             Route::get('{diamondCode}/image', [Dashboard\DiamondCodeController::class, 'image'])->name('image');
             Route::delete('{diamondCode}', [Dashboard\DiamondCodeController::class, 'destroy'])->name('destroy');
+
+            // Manage "codes" products quickly from the codes inventory screen
+            Route::patch('product/{product}', [Dashboard\DiamondCodeController::class, 'updateProduct'])->name('product.update');
+            Route::delete('product/{product}', [Dashboard\DiamondCodeController::class, 'destroyProduct'])->name('product.destroy');
         });
         
         Route::get('dashboard', Dashboard\DashboardController::class)->name('dashboard');

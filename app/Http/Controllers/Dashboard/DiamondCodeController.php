@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class DiamondCodeController extends Controller
 {
@@ -216,6 +217,79 @@ class DiamondCodeController extends Controller
         $diamondCode->delete();
 
         return back()->with('success', 'تم حذف الكود.');
+    }
+
+    public function updateProduct(Request $request, Product $product)
+    {
+        abort_unless(($product->service_type ?? null) === 'codes', 404);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $name = trim($data['name']);
+        if ($name === '') {
+            return back()->withErrors(['error' => 'اسم المنتج مطلوب.'])->withInput();
+        }
+
+        $product->update([
+            'price' => (float) $data['price'],
+        ]);
+
+        DB::table('product_translations')->updateOrInsert(
+            ['product_id' => $product->id, 'locale' => 'ar'],
+            ['name' => $name, 'description' => $name]
+        );
+        DB::table('product_translations')->updateOrInsert(
+            ['product_id' => $product->id, 'locale' => 'en'],
+            ['name' => $name, 'description' => $name]
+        );
+
+        $this->forgetCodesPageCache();
+
+        return back()->with('success', 'تم تحديث المنتج بنجاح.');
+    }
+
+    public function destroyProduct(Product $product)
+    {
+        abort_unless(($product->service_type ?? null) === 'codes', 404);
+
+        $hasManualPayments = DB::table('manual_payment_requests')
+            ->where('product_id', $product->id)
+            ->exists();
+
+        if ($hasManualPayments) {
+            return back()->withErrors(['error' => 'لا يمكن حذف هذا المنتج لوجود طلبات دفع مرتبطة به.']);
+        }
+
+        $hasDeliveredCodes = DiamondCode::query()
+            ->where('product_id', $product->id)
+            ->where('status', 'delivered')
+            ->exists();
+
+        if ($hasDeliveredCodes) {
+            return back()->withErrors(['error' => 'لا يمكن حذف هذا المنتج لأن هناك أكواد تم تسليمها بالفعل.']);
+        }
+
+        // Remove any stored images for available codes before deleting (to avoid orphaned files)
+        $paths = DiamondCode::query()
+            ->where('product_id', $product->id)
+            ->whereNotNull('image_path')
+            ->pluck('image_path')
+            ->all();
+
+        foreach ($paths as $p) {
+            Storage::disk('public')->delete($p);
+        }
+
+        // Deleting the product will cascade delete available diamond codes (FK cascade)
+        $product->deleteExistingMedia('product', $product, null, 'media', true, 'product');
+        $product->delete();
+
+        $this->forgetCodesPageCache();
+
+        return redirect()->route('admin.diamond_codes.create')->with('success', 'تم حذف المنتج بنجاح.');
     }
 }
 
