@@ -83,6 +83,11 @@ class Product extends Model implements TranslatableContract {
     {
         return $this->hasMany(ProductVideo::class);
     }
+
+    public function diamondCodes()
+    {
+        return $this->hasMany(DiamondCode::class, 'product_id');
+    }
     
     public function getImageUrl()
 {

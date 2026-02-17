@@ -48,10 +48,7 @@ class ProductDataTable extends BaseDataTable {
  
     public function query(): QueryBuilder
     {
-        // ✅ التعديل هنا:
-        // إضافة شرط whereNull('service_type') لاستبعاد منتجات الشحن من القائمة
         return Product::with(['media','category', 'brand', 'tags'])
-            ->whereNull('service_type') 
             ->latest();
     }
  
