@@ -30,32 +30,43 @@
         @csrf
 
         <div>
-            <label class="block text-sm font-extrabold mb-1">منتج الأكواد</label>
-            @if($products->isEmpty())
-                <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
-                    لا يوجد منتجات في قسم <b>أكواد ملابس</b> حتى الآن.
-                    <div class="mt-2">
-                        أنشئ باقة أكواد من هنا:
-                        <a class="font-extrabold underline" href="{{ route('admin.products.create_charge') }}">
-                            إضافة منتجات الشحن/الأكواد
-                        </a>
+            <label class="block text-sm font-extrabold mb-2">اختر المنتج أو أنشئ منتج جديد</label>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="rounded-2xl border border-gray-200 bg-white p-4 cursor-pointer">
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="product_mode" value="existing" class="accent-black"
+                               @checked(old('product_mode', 'existing') === 'existing')>
+                        <span class="font-extrabold text-sm">اختيار منتج موجود</span>
                     </div>
-                </div>
-            @elseif($products->count() === 1)
-                @php($p = $products->first())
-                <input type="hidden" name="product_id" value="{{ $p->id }}">
-                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-                    تم اختيار المنتج تلقائيًا:
-                    <b>{{ $p->name }}</b> (ID: {{ $p->id }})
-                </div>
-            @else
-                <select name="product_id" required class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
-                    <option value="">-- اختر المنتج --</option>
-                    @foreach($products as $p)
-                        <option value="{{ $p->id }}" @selected(old('product_id') == $p->id)>{{ $p->name }} (ID: {{ $p->id }})</option>
-                    @endforeach
-                </select>
-            @endif
+                    <div class="mt-3">
+                        <select name="product_id" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                            <option value="">-- اختر المنتج --</option>
+                            @foreach($products as $p)
+                                <option value="{{ $p->id }}" @selected(old('product_id') == $p->id)>{{ $p->name }} (ID: {{ $p->id }})</option>
+                            @endforeach
+                        </select>
+                        <div class="text-xs text-gray-500 mt-2">إذا القائمة فاضية، استخدم “منتج جديد”.</div>
+                    </div>
+                </label>
+
+                <label class="rounded-2xl border border-gray-200 bg-white p-4 cursor-pointer">
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="product_mode" value="new" class="accent-black"
+                               @checked(old('product_mode') === 'new')>
+                        <span class="font-extrabold text-sm">منتج جديد (اسم على مزاجك)</span>
+                    </div>
+                    <div class="mt-3 space-y-2">
+                        <input type="text" name="product_name" value="{{ old('product_name') }}"
+                               class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                               placeholder="مثال: أكواد رقصات / أكواد سكن / أكواد سكاكين">
+                        <input type="number" step="0.01" name="product_price" value="{{ old('product_price') }}"
+                               class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                               placeholder="السعر (اختياري)">
+                        <div class="text-xs text-gray-500">سيتم إنشاء منتج أكواد جديد تلقائيًا.</div>
+                    </div>
+                </label>
+            </div>
         </div>
 
         <div>
@@ -92,8 +103,7 @@
             </div>
         </div>
 
-        <button class="w-full rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                @disabled($products->isEmpty())>
+        <button class="w-full rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition">
             حفظ
         </button>
     </form>

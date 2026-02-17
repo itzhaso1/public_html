@@ -14,6 +14,14 @@
             <p class="text-sm text-gray-600 mt-1">إضافة أكواد جديدة ومتابعة الأكواد المسلّمة.</p>
         </div>
         <div class="flex gap-2">
+            <form method="GET" action="{{ route('admin.diamond_codes.index') }}" class="flex items-center gap-2">
+                <select name="status" class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                    <option value="available" @selected(($status ?? 'available') === 'available')>المتاح فقط</option>
+                    <option value="delivered" @selected(($status ?? '') === 'delivered')>المُسلّم فقط</option>
+                    <option value="all" @selected(($status ?? '') === 'all')>الكل</option>
+                </select>
+                <button class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-bold hover:bg-gray-50">تصفية</button>
+            </form>
             <a href="{{ route('admin.diamond_codes.create') }}"
                class="inline-flex items-center justify-center rounded-xl bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 transition">
                 + إضافة كود

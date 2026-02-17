@@ -8,19 +8,24 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class DiamondCodeController extends Controller
 {
     public function index()
     {
+        $status = request()->query('status', 'available');
+
         $codes = DiamondCode::query()
             ->with(['product', 'user'])
+            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
             ->latest()
             ->paginate(50);
 
         return view('dashboard.admin.diamond_codes.index', [
             'pageTitle' => 'أكواد ملابس',
             'codes' => $codes,
+            'status' => $status,
         ]);
     }
 
@@ -40,24 +45,11 @@ class DiamondCodeController extends Controller
 
     public function store(Request $request)
     {
-        // If admin didn't choose a product (or there is only one), auto-select.
-        $codesProductIds = Product::query()
-            ->where('service_type', 'codes')
-            ->pluck('id');
-
-        $productId = $request->input('product_id');
-        if (! $productId && $codesProductIds->count() === 1) {
-            $productId = $codesProductIds->first();
-        }
-
-        $request->merge(['product_id' => $productId]);
-
         $data = $request->validate([
-            'product_id' => [
-                'required',
-                'integer',
-                Rule::exists('products', 'id')->where(fn ($q) => $q->where('service_type', 'codes')),
-            ],
+            'product_mode' => ['required', Rule::in(['existing', 'new'])],
+            'product_id' => ['nullable', 'integer', Rule::exists('products', 'id')->where(fn ($q) => $q->where('service_type', 'codes'))],
+            'product_name' => ['nullable', 'string', 'max:255'],
+            'product_price' => ['nullable', 'numeric', 'min:0'],
             // One code (single) OR multiple codes (one per line)
             'code' => ['nullable', 'string', 'max:500'],
             'codes' => ['nullable', 'string', 'max:20000'],
@@ -65,7 +57,57 @@ class DiamondCodeController extends Controller
             'images.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $product = Product::findOrFail($data['product_id']);
+        // Resolve / create product
+        if (($data['product_mode'] ?? null) === 'new') {
+            $name = trim((string) ($data['product_name'] ?? ''));
+            if ($name === '') {
+                return back()->withErrors(['product_name' => 'اسم المنتج مطلوب.'])->withInput();
+            }
+
+            $categoryId = \DB::table('categories')->value('id');
+            $typeId = \DB::table('types')->value('id');
+            if (! $categoryId) {
+                return back()->withErrors(['product_name' => 'لا يوجد أقسام (Categories) في النظام. أضف قسم أولاً.'])->withInput();
+            }
+
+            $baseSlug = Str::slug($name) ?: ('codes-'.time());
+            $slug = $baseSlug;
+            $i = 1;
+            while (Product::query()->where('slug', $slug)->exists()) {
+                $i++;
+                $slug = $baseSlug.'-'.$i;
+            }
+
+            $product = Product::create([
+                'slug' => $slug,
+                'type' => 'simple',
+                'category_id' => $categoryId,
+                'type_id' => $typeId ?: null,
+                'service_type' => 'codes',
+                'price' => $data['product_price'] ?? 0,
+                'price_before_discount' => null,
+                'stock' => 9999,
+                'sku' => 'CODES-'.time(),
+                'featured' => false,
+                'status' => 'published',
+                'published_at' => now(),
+            ]);
+
+            \DB::table('product_translations')->updateOrInsert(
+                ['product_id' => $product->id, 'locale' => 'ar'],
+                ['name' => $name, 'description' => $name]
+            );
+            \DB::table('product_translations')->updateOrInsert(
+                ['product_id' => $product->id, 'locale' => 'en'],
+                ['name' => $name, 'description' => $name]
+            );
+        } else {
+            if (empty($data['product_id'])) {
+                return back()->withErrors(['product_id' => 'اختر المنتج أو أنشئ منتج جديد.'])->withInput();
+            }
+
+            $product = Product::findOrFail($data['product_id']);
+        }
 
         $singleCode = trim((string) ($data['code'] ?? ''));
         $bulkCodesText = trim((string) ($data['codes'] ?? ''));
