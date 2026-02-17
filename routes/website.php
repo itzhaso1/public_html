@@ -67,7 +67,12 @@ Route::group(
                             $q->where('status', 'pending');
                         },
                     ])
-                    ->havingRaw('available_codes_count > pending_manual_requests_count')
+                    // Use a correlated WHERE (more compatible than HAVING for SQLite).
+                    ->whereRaw(
+                        '(select count(*) from diamond_codes dc where dc.product_id = products.id and dc.status = ?) >
+                         (select count(*) from manual_payment_requests mpr where mpr.product_id = products.id and mpr.status = ?)',
+                        ['available', 'pending']
+                    )
                     ->with(['media', 'translations'])
                     ->get();
             });
