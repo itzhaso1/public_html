@@ -6,12 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\DiamondCode;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 class DiamondCodeController extends Controller
 {
+    private function forgetCodesPageCache(): void
+    {
+        foreach (['ar', 'en'] as $locale) {
+            Cache::forget("diamonds.codes.$locale");
+        }
+    }
+
     public function index()
     {
         $status = request()->query('status', 'available');
@@ -101,6 +109,9 @@ class DiamondCodeController extends Controller
                 ['product_id' => $product->id, 'locale' => 'en'],
                 ['name' => $name, 'description' => $name]
             );
+
+            // Ensure website codes page updates immediately.
+            $this->forgetCodesPageCache();
         } else {
             if (empty($data['product_id'])) {
                 return back()->withErrors(['product_id' => 'اختر المنتج أو أنشئ منتج جديد.'])->withInput();
@@ -159,6 +170,7 @@ class DiamondCodeController extends Controller
                 ]);
             }
 
+            $this->forgetCodesPageCache();
             return redirect()->route('admin.diamond_codes.index')->with('success', 'تمت إضافة '.count($codes).' كود بنجاح.');
         }
 
@@ -179,6 +191,7 @@ class DiamondCodeController extends Controller
             'status' => 'available',
         ]);
 
+        $this->forgetCodesPageCache();
         return redirect()->route('admin.diamond_codes.index')->with('success', 'تم إضافة الكود بنجاح.');
     }
 
