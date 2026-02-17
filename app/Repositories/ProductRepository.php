@@ -28,14 +28,13 @@ class ProductRepository implements ProductInterface
      * ========================= */
     public function create()
     {
+        $defaultCategoryId = Category::query()->where('status', 'active')->value('id') ?? Category::query()->value('id');
+        $defaultTypeId = Type::query()->value('id');
+
         return view('dashboard.admin.products.form', [
             'pageTitle' => 'إضافة منتج',
-            'data' => [
-                'categories' => Category::active()->get(),
-                'types'      => Type::all(),
-                'brands'     => Brand::all(),
-                'tags'       => Tag::all(),
-            ],
+            'defaultCategoryId' => $defaultCategoryId,
+            'defaultTypeId' => $defaultTypeId,
         ]);
     }
 
@@ -178,15 +177,14 @@ if ($request->hasFile('video')) {
     {
         $product->load(['tags', 'media']);
 
+        $defaultCategoryId = Category::query()->where('status', 'active')->value('id') ?? Category::query()->value('id');
+        $defaultTypeId = Type::query()->value('id');
+
         return view('dashboard.admin.products.form', [
             'pageTitle' => 'تعديل منتج',
             'product'   => $product,
-            'data' => [
-                'categories' => Category::active()->get(),
-                'types'      => Type::all(),
-                'brands'     => Brand::all(),
-                'tags'       => Tag::all(),
-            ],
+            'defaultCategoryId' => $defaultCategoryId,
+            'defaultTypeId' => $defaultTypeId,
         ]);
     }
 
@@ -220,6 +218,22 @@ if ($request->hasFile('video')) {
             'slug',
             'client_number',
         ]);
+
+        if (empty($data['category_id'])) {
+            $data['category_id'] = Category::query()->where('status', 'active')->value('id') ?? Category::query()->value('id');
+        }
+
+        if (empty($data['type_id'])) {
+            $data['type_id'] = Type::query()->value('id');
+        }
+
+        if (empty($data['stock'])) {
+            $data['stock'] = 9999;
+        }
+
+        if (empty($data['status'])) {
+            $data['status'] = 'published';
+        }
 
         $data['featured'] = $request->has('featured');
 
