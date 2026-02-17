@@ -40,12 +40,49 @@
                         <span class="font-extrabold text-sm">اختيار منتج موجود</span>
                     </div>
                     <div class="mt-3">
-                        <select name="product_id" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                        <select id="existingProductSelect" name="product_id" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
                             <option value="">-- اختر المنتج --</option>
                             @foreach($products as $p)
-                                <option value="{{ $p->id }}" @selected(old('product_id') == $p->id)>{{ $p->name }} (ID: {{ $p->id }})</option>
+                                <option value="{{ $p->id }}"
+                                        data-name="{{ $p->name }}"
+                                        data-price="{{ (float) $p->price }}"
+                                        @selected(old('product_id') == $p->id)>
+                                    {{ $p->name }} (ID: {{ $p->id }})
+                                </option>
                             @endforeach
                         </select>
+
+                        <div id="existingProductMeta" class="mt-3 hidden rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs text-gray-700">
+                            <div class="flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="text-gray-500">المنتج المحدد</div>
+                                    <div class="font-extrabold" id="metaName">-</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-gray-500">السعر</div>
+                                    <div class="font-extrabold" id="metaPrice">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <button type="button" id="btnQuickEditProduct"
+                                    class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-extrabold hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled>
+                                تعديل الاسم والسعر
+                            </button>
+                            <button type="button" id="btnDeleteProduct"
+                                    class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-extrabold text-red-700 hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled>
+                                حذف المنتج
+                            </button>
+                            <a id="btnFullEditProduct"
+                               href="#"
+                               class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-extrabold hover:bg-gray-50 transition pointer-events-none opacity-50">
+                                تعديل كامل
+                            </a>
+                        </div>
+
                         <div class="text-xs text-gray-500 mt-2">إذا القائمة فاضية، استخدم “منتج جديد”.</div>
                     </div>
                 </label>
@@ -107,7 +144,150 @@
             حفظ
         </button>
     </form>
+
+    <!-- Quick edit modal (existing product) -->
+    <div id="editProductModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="relative mx-auto mt-20 w-[92%] max-w-lg rounded-2xl bg-white shadow-xl border border-gray-200">
+            <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <div class="text-sm text-gray-500">تعديل سريع</div>
+                    <div class="text-lg font-extrabold">تعديل اسم وسعر المنتج</div>
+                </div>
+                <button type="button" id="btnCloseEditModal"
+                        class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-extrabold hover:bg-gray-50">
+                    إغلاق
+                </button>
+            </div>
+            <form id="quickEditProductForm" class="p-5 space-y-3" method="POST" action="#">
+                @csrf
+                @method('PATCH')
+                <div>
+                    <label class="block text-xs font-extrabold mb-1">الاسم</label>
+                    <input type="text" name="name" id="editProductName"
+                           class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                           placeholder="اسم المنتج">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold mb-1">السعر</label>
+                    <input type="number" step="0.01" min="0" name="price" id="editProductPrice"
+                           class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                           placeholder="0.00">
+                </div>
+
+                <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-900">
+                    ملاحظة: هذا التعديل مخصص لمنتجات “أكواد ملابس” فقط.
+                </div>
+
+                <button type="submit"
+                        class="w-full rounded-xl bg-black px-5 py-3 text-sm font-extrabold text-white hover:bg-gray-800 transition">
+                    حفظ التعديل
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <form id="deleteProductForm" method="POST" action="#" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
 </main>
+
+<script>
+  (function () {
+    const select = document.getElementById('existingProductSelect');
+    const metaBox = document.getElementById('existingProductMeta');
+    const metaName = document.getElementById('metaName');
+    const metaPrice = document.getElementById('metaPrice');
+
+    const btnQuickEdit = document.getElementById('btnQuickEditProduct');
+    const btnDelete = document.getElementById('btnDeleteProduct');
+    const btnFullEdit = document.getElementById('btnFullEditProduct');
+
+    const modal = document.getElementById('editProductModal');
+    const btnCloseModal = document.getElementById('btnCloseEditModal');
+    const quickEditForm = document.getElementById('quickEditProductForm');
+    const deleteForm = document.getElementById('deleteProductForm');
+
+    const inputName = document.getElementById('editProductName');
+    const inputPrice = document.getElementById('editProductPrice');
+
+    const updateTpl = @json(route('admin.diamond_codes.product.update', ['product' => 0]));
+    const deleteTpl = @json(route('admin.diamond_codes.product.destroy', ['product' => 0]));
+    const fullEditTpl = @json(route('admin.products.edit', ['product' => 0]));
+
+    function setDisabled(disabled) {
+      btnQuickEdit.disabled = disabled;
+      btnDelete.disabled = disabled;
+      if (disabled) {
+        btnFullEdit.classList.add('pointer-events-none', 'opacity-50');
+        btnFullEdit.setAttribute('href', '#');
+      } else {
+        btnFullEdit.classList.remove('pointer-events-none', 'opacity-50');
+      }
+    }
+
+    function updateMeta() {
+      const opt = select?.selectedOptions?.[0];
+      const id = opt && opt.value ? opt.value : '';
+
+      if (!id) {
+        metaBox?.classList.add('hidden');
+        metaName.textContent = '-';
+        metaPrice.textContent = '-';
+        setDisabled(true);
+        return;
+      }
+
+      const name = opt.getAttribute('data-name') || '-';
+      const price = opt.getAttribute('data-price') || '0';
+      metaBox?.classList.remove('hidden');
+      metaName.textContent = name;
+      metaPrice.textContent = `ر.س ${Number(price).toFixed(2)}`;
+
+      quickEditForm.action = updateTpl.replace(/\/0$/, `/${id}`);
+      deleteForm.action = deleteTpl.replace(/\/0$/, `/${id}`);
+      btnFullEdit.setAttribute('href', fullEditTpl.replace(/\/0\/edit$/, `/${id}/edit`));
+      setDisabled(false);
+
+      // Pre-fill modal inputs
+      inputName.value = name;
+      inputPrice.value = Number(price);
+    }
+
+    function openModal() {
+      if (!modal) return;
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      if (!modal) return;
+      modal.classList.add('hidden');
+    }
+
+    select?.addEventListener('change', updateMeta);
+    btnQuickEdit?.addEventListener('click', () => {
+      if (btnQuickEdit.disabled) return;
+      openModal();
+    });
+    btnCloseModal?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal.firstElementChild) closeModal();
+    });
+
+    btnDelete?.addEventListener('click', () => {
+      if (btnDelete.disabled) return;
+      const opt = select?.selectedOptions?.[0];
+      const name = opt?.getAttribute('data-name') || 'هذا المنتج';
+      const ok = confirm(`هل أنت متأكد من حذف المنتج: ${name} ؟\\nقد يؤثر ذلك على المخزون.`);
+      if (!ok) return;
+      deleteForm.submit();
+    });
+
+    // initialize with old value
+    updateMeta();
+  })();
+</script>
 </body>
 </html>
 
