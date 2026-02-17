@@ -1,8 +1,7 @@
 <div class="sidebar">
     <div class="menu-item">
         <div class="pb-2 menu-content">
-            <span class="menu-section text-muted text-uppercase fs-8 ls-1">{{ check_guard()->name . ' | ' .
-                $settings?->name }}
+            <span class="menu-section text-muted text-uppercase fs-8 ls-1">{{ 'ADMIN | ' . ($settings?->name ?? '') }}
             </span>
         </div>
     </div>
