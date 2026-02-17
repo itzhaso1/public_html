@@ -20,11 +20,41 @@ if (! function_exists('check_guard')) {
     function check_guard()
     {
         $guards = ['admin', 'manager'];
-        foreach ($guards as $guard) {
-            if (auth($guard)->check()) {
-                return auth($guard);
+
+        foreach ($guards as $guardName) {
+            if (! auth($guardName)->check()) {
+                continue;
             }
+
+            // Wrap the guard so Blade can safely access `$guard->name`
+            // while still allowing `$guard->user()` and other guard methods.
+            return new class($guardName) {
+                public string $name;
+                private $guard;
+
+                public function __construct(string $name)
+                {
+                    $this->name = $name;
+                    $this->guard = auth($name);
+                }
+
+                public function user()
+                {
+                    return $this->guard->user();
+                }
+
+                public function guard()
+                {
+                    return $this->guard;
+                }
+
+                public function __call($method, $args)
+                {
+                    return $this->guard->{$method}(...$args);
+                }
+            };
         }
+
         return null;
     }
 }
