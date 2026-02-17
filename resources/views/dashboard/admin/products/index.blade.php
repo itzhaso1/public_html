@@ -180,6 +180,39 @@ div.dt-buttons{ display:none !important; }
             </div>
 
             <div class="card-body py-4">
+                <div class="mb-5">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div>
+                                <div class="fw-bolder text-dark">روابط سريعة للأدمن</div>
+                                <div class="text-muted small">اختصارات لإدارة الدفع اليدوي ومخزون الأكواد بسرعة.</div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('admin.manual_payments.index') }}"
+                                   class="btn btn-sm btn-light-primary fw-bolder">
+                                    <i class="fas fa-clipboard-check me-1"></i>
+                                    طلبات الدفع اليدوي
+                                </a>
+                                <a href="{{ route('admin.diamond_codes.index') }}"
+                                   class="btn btn-sm btn-light-info fw-bolder">
+                                    <i class="fas fa-ticket-alt me-1"></i>
+                                    مخزون أكواد ملابس
+                                </a>
+                                <a href="{{ route('admin.diamond_codes.create') }}"
+                                   class="btn btn-sm btn-light-success fw-bolder">
+                                    <i class="fas fa-plus-circle me-1"></i>
+                                    إضافة أكواد
+                                </a>
+                                <a href="{{ route('admin.products.create_charge') }}"
+                                   class="btn btn-sm btn-light-warning fw-bolder">
+                                    <i class="fas fa-bolt me-1"></i>
+                                    إضافة منتج شحن
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-wrap">
                     {!! $dataTable->table(['id' => 'products-table', 'class' => 'table table-striped table-row-bordered gy-5 gs-7 align-middle text-center w-100']) !!}
                 </div>
