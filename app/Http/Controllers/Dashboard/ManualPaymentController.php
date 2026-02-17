@@ -102,10 +102,18 @@ class ManualPaymentController extends Controller
             'admin_note' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $manualPaymentRequest->load(['product']);
+
         $manualPaymentRequest->update([
             'status' => 'rejected',
             'admin_note' => $request->input('admin_note'),
         ]);
+
+        if (($manualPaymentRequest->product?->service_type ?? null) === 'codes') {
+            foreach (['ar', 'en'] as $locale) {
+                Cache::forget("diamonds.codes.$locale");
+            }
+        }
 
         return redirect()
             ->route('admin.manual_payments.show', $manualPaymentRequest)

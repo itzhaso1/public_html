@@ -88,6 +88,11 @@ class Product extends Model implements TranslatableContract {
     {
         return $this->hasMany(DiamondCode::class, 'product_id');
     }
+
+    public function manualPaymentRequests()
+    {
+        return $this->hasMany(ManualPaymentRequest::class, 'product_id');
+    }
     
     public function getImageUrl()
 {

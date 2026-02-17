@@ -17,7 +17,14 @@
             ->where('status', 'available')
             ->count()
         : null;
-    $isOutOfStock = $isCodes && ((int) $availableCodesCount) === 0;
+    $pendingRequestsCount = $isCodes
+        ? \App\Models\ManualPaymentRequest::query()
+            ->where('product_id', $product->id)
+            ->where('status', 'pending')
+            ->count()
+        : null;
+    $effectiveAvailable = $isCodes ? max(0, ((int) $availableCodesCount) - ((int) $pendingRequestsCount)) : null;
+    $isOutOfStock = $isCodes && ((int) $effectiveAvailable) === 0;
 @endphp
 
 @include('website.diamonds.partials.header', [

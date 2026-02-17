@@ -59,14 +59,15 @@ Route::group(
             $products = Cache::remember("diamonds.codes.$locale", 60 * 5, function () {
                 return Product::query()
                     ->where('service_type', 'codes')
-                    ->whereHas('diamondCodes', function ($q) {
-                        $q->where('status', 'available');
-                    })
                     ->withCount([
                         'diamondCodes as available_codes_count' => function ($q) {
                             $q->where('status', 'available');
                         },
+                        'manualPaymentRequests as pending_manual_requests_count' => function ($q) {
+                            $q->where('status', 'pending');
+                        },
                     ])
+                    ->havingRaw('available_codes_count > pending_manual_requests_count')
                     ->with(['media', 'translations'])
                     ->get();
             });
