@@ -8,27 +8,48 @@ use App\Models\ManualPaymentRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ManualPaymentController extends Controller
 {
+    private function forgetCodesPageCache(): void
+    {
+        foreach (['ar', 'en'] as $locale) {
+            Cache::forget("diamonds.codes.$locale");
+        }
+    }
+
+    private function ensureCodesAvailabilityOrRedirect(Product $product)
+    {
+        $available = DiamondCode::query()
+            ->where('product_id', $product->id)
+            ->where('status', 'available')
+            ->count();
+
+        $pending = ManualPaymentRequest::query()
+            ->where('product_id', $product->id)
+            ->where('status', 'pending')
+            ->count();
+
+        if (($available - $pending) <= 0) {
+            return redirect()
+                ->route('website.diamonds.codes')
+                ->withErrors(['error' => 'نفذت الكمية لهذا المنتج حالياً.']);
+        }
+
+        return null;
+    }
+
     public function create(Product $product)
     {
         abort_unless(config('bank.enabled'), 404);
 
         $isCodes = ($product->service_type ?? null) === 'codes';
         if ($isCodes) {
-            $hasStock = DiamondCode::query()
-                ->where('product_id', $product->id)
-                ->where('status', 'available')
-                ->exists();
-
-            if (! $hasStock) {
-                return redirect()
-                    ->route('website.diamonds.codes')
-                    ->withErrors(['error' => 'نفذت الكمية لهذا المنتج حالياً.']);
-            }
+            $redirect = $this->ensureCodesAvailabilityOrRedirect($product);
+            if ($redirect) return $redirect;
         }
 
         return view('website.diamonds.manual_payment', [
@@ -43,16 +64,8 @@ class ManualPaymentController extends Controller
 
         $isCodes = ($product->service_type ?? null) === 'codes';
         if ($isCodes) {
-            $hasStock = DiamondCode::query()
-                ->where('product_id', $product->id)
-                ->where('status', 'available')
-                ->exists();
-
-            if (! $hasStock) {
-                return redirect()
-                    ->route('website.diamonds.codes')
-                    ->withErrors(['error' => 'نفذت الكمية لهذا المنتج حالياً.']);
-            }
+            $redirect = $this->ensureCodesAvailabilityOrRedirect($product);
+            if ($redirect) return $redirect;
         }
 
         $rules = [
@@ -101,6 +114,11 @@ class ManualPaymentController extends Controller
             'ip' => $request->ip(),
             'user_agent' => Str::limit((string) $request->userAgent(), 512, ''),
         ]);
+
+        if ($isCodes) {
+            // After creating a pending request, the product may become effectively out-of-stock.
+            $this->forgetCodesPageCache();
+        }
 
         return redirect()->route('website.diamonds.manual_payment.thanks', ['reference' => $mpr->reference]);
     }
